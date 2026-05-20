@@ -84,12 +84,6 @@ const EVENTS = [
   },
 ];
 
-const NOTIFICATIONS = [
-  { id: "1", text: "Your booking for May 20 is confirmed!", unread: true },
-  { id: "2", text: "Flash Sale: 20% off this weekend!", unread: true },
-  { id: "3", text: "Your review was posted. Thank you!", unread: false },
-];
-
 const DEALS = [
   {
     iconName: "bolt",
@@ -113,13 +107,9 @@ const DEALS = [
 
 export default function HomeScreen() {
   const [currentPromo, setCurrentPromo] = useState(0);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [userPoints, setUserPoints] = useState<number | null>(null);
   const [memberRank, setMemberRank] = useState<string>("Silver Member");
-  const [unreadCount, setUnreadCount] = useState(
-    NOTIFICATIONS.filter((n) => n.unread).length,
-  );
   const [weather, setWeather] = useState<{
     temp: string;
     label: string;
@@ -182,13 +172,13 @@ export default function HomeScreen() {
       ref={mainScrollRef}
       style={{ flex: 1, backgroundColor: C.white }}
     >
-      {/* ── HEADER: Logo + Bell ── */}
+      {/* ── HEADER: Logo only ── */}
       <View
         style={{
           backgroundColor: C.green,
           paddingTop: 34,
-          paddingBottom: 4, // thinner bottom padding
-          paddingLeft: -10, // no left padding so logo hugs the edge
+          paddingBottom: 4,
+          paddingLeft: 0,
           paddingRight: 20,
           flexDirection: "row",
           alignItems: "center",
@@ -200,113 +190,7 @@ export default function HomeScreen() {
           style={{ width: 450, height: 70, marginLeft: -150 }}
           resizeMode="contain"
         />
-        <TouchableOpacity
-          onPress={() => setShowNotifications(!showNotifications)}
-          style={{
-            backgroundColor: "rgba(255,255,255,0.15)",
-            borderRadius: 12,
-            padding: 8,
-            position: "relative",
-          }}
-        >
-          <Ionicons
-            name={showNotifications ? "notifications" : "notifications-outline"}
-            size={24}
-            color={C.white}
-          />
-          {unreadCount > 0 && (
-            <View
-              style={{
-                position: "absolute",
-                top: 4,
-                right: 4,
-                backgroundColor: "#EF4444",
-                borderRadius: 10,
-                width: 16,
-                height: 16,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text style={{ color: C.white, fontSize: 9, fontWeight: "bold" }}>
-                {unreadCount}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
       </View>
-
-      {/* Notifications Dropdown */}
-      {showNotifications && (
-        <View
-          style={{
-            backgroundColor: C.white,
-            marginHorizontal: 16,
-            borderRadius: 16,
-            overflow: "hidden",
-            shadowColor: "#000",
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
-            elevation: 6,
-            zIndex: 99,
-          }}
-        >
-          <Text
-            style={{
-              fontWeight: "bold",
-              color: C.green,
-              padding: 14,
-              borderBottomWidth: 1,
-              borderBottomColor: "#F1F5F9",
-              fontSize: 14,
-            }}
-          >
-            Notifications
-          </Text>
-          {NOTIFICATIONS.map((n) => (
-            <View
-              key={n.id}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: "#F8FAFC",
-                backgroundColor: n.unread ? C.lavender : C.white,
-                gap: 10,
-              }}
-            >
-              <Ionicons
-                name={n.unread ? "ellipse" : "ellipse-outline"}
-                size={8}
-                color={n.unread ? C.green : "#CBD5E1"}
-              />
-              <Text style={{ color: "#0F172A", fontSize: 13, flex: 1 }}>
-                {n.text}
-              </Text>
-            </View>
-          ))}
-          <TouchableOpacity
-            onPress={() => {
-              setUnreadCount(0);
-              setShowNotifications(false);
-            }}
-            style={{
-              padding: 12,
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 6,
-            }}
-          >
-            <Ionicons name="checkmark-done" size={14} color="#64748B" />
-            <Text style={{ color: "#64748B", fontSize: 12 }}>
-              Mark all as read
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       {/* ── HERO VIDEO — clean, no overlay ── */}
       <View style={{ position: "relative" }}>
@@ -414,7 +298,7 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            {/* Right: Weather*/}
+            {/* Right: Weather */}
             <View
               style={{
                 alignItems: "center",
@@ -495,7 +379,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* ── JOIN BANNER + ROOMS ── */}
+      {/* ── ROOMS ── */}
       <RoomsSection />
 
       {/* ── EVENTS ── */}
@@ -678,29 +562,6 @@ export default function HomeScreen() {
             />
           ))}
         </View>
-        <TouchableOpacity
-          onPress={() => router.push("/booking")}
-          style={{
-            marginTop: 24,
-            backgroundColor: C.gold,
-            paddingVertical: 14,
-            paddingHorizontal: 35,
-            borderRadius: 30,
-            alignSelf: "center",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            shadowColor: "#000",
-            shadowOpacity: 0.2,
-            shadowRadius: 6,
-            elevation: 4,
-          }}
-        >
-          <FontAwesome5 name="calendar-check" size={14} color={C.white} />
-          <Text style={{ color: C.white, fontWeight: "bold", fontSize: 16 }}>
-            Book Now
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* ── GUEST REVIEWS ── */}

@@ -1,3 +1,4 @@
+import { FontAwesome5 } from "@expo/vector-icons";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Room } from "../constants/rooms";
@@ -9,6 +10,7 @@ const C = {
   offWhite: "#F8FAFC",
   gray: "#64748B",
   grayLight: "#E5E7EB",
+  lavender: "#F0EEF5",
   dark: "#0D1B12",
 };
 
@@ -27,7 +29,8 @@ export function RoomCard({ room, onPress }: RoomCardProps) {
 
       {/* Capacity badge */}
       <View style={s.badge}>
-        <Text style={s.badgeText}>👤 {room.capacity}</Text>
+        <FontAwesome5 name="user" size={10} color={C.white} />
+        <Text style={s.badgeText}>{room.capacity}</Text>
       </View>
 
       {/* Info */}
@@ -48,10 +51,12 @@ export function RoomCard({ room, onPress }: RoomCardProps) {
         {/* Pills */}
         <View style={s.pillsRow}>
           <View style={s.pill}>
-            <Text style={s.pillText}>📐 {room.size}</Text>
+            <FontAwesome5 name="expand" size={10} color={C.gray} />
+            <Text style={s.pillText}>{room.size}</Text>
           </View>
           <View style={s.pill}>
-            <Text style={s.pillText}>🛏 {room.bedding}</Text>
+            <FontAwesome5 name="bed" size={10} color={C.gray} />
+            <Text style={s.pillText}>{room.bedding}</Text>
           </View>
         </View>
 
@@ -67,7 +72,7 @@ const s = StyleSheet.create({
   card: {
     backgroundColor: C.white,
     borderRadius: 20,
-    marginBottom: 16,
+    marginBottom: 20,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOpacity: 0.08,
@@ -85,6 +90,9 @@ const s = StyleSheet.create({
     right: 14,
     backgroundColor: "rgba(0,0,0,0.5)",
     borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
@@ -142,6 +150,9 @@ const s = StyleSheet.create({
     paddingVertical: 5,
     borderWidth: 1,
     borderColor: C.grayLight,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
   },
   pillText: {
     fontSize: 12,

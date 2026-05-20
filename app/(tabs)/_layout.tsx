@@ -2,32 +2,28 @@ import { HapticTab } from "@/components/haptic-tab";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarActiveTintColor: "#14532D",
+        tabBarActiveTintColor: "#1B4332",
         tabBarInactiveTintColor: "#000000",
         tabBarShowLabel: false,
         tabBarStyle: {
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: Platform.OS === "ios" ? 100 : 80,
-          borderRadius: 0,
           backgroundColor: "#FFFFFF",
-          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopWidth: 0.5,
           borderTopColor: "#DBDBDB",
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom,
+          paddingTop: 8,
           elevation: 0,
           shadowOpacity: 0,
-          paddingBottom: Platform.OS === "ios" ? 36 : 24,
-          paddingTop: 10,
-          paddingHorizontal: 0,
         },
       }}
     >
@@ -76,8 +72,8 @@ export default function TabLayout() {
           title: "Profile",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "person" : "person-outline"}
-              size={26}
+              name={focused ? "person-circle" : "person-circle-outline"}
+              size={28}
               color={color}
             />
           ),
@@ -96,5 +92,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({});

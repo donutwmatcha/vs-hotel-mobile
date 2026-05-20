@@ -13,7 +13,6 @@ import {
   Image,
   Linking,
   Modal,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -22,6 +21,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
@@ -197,8 +198,8 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
   {
     id: "retail-shopping",
     title: "Shopping",
-    subtitle: "Boutique • Lifestyle • Gifts",
-    tags: ["Boutique", "Lifestyle", "Gifts"],
+    subtitle: "Conbini • Lifestyle • Gifts",
+    tags: ["Conbini", "Lifestyle", "Gifts"],
     description: "Premium shops and lifestyle brands right at your doorstep.",
     bg: "#0E1218",
     icon: <FontAwesome5 name="shopping-bag" size={18} color="#D4A017" />,
@@ -473,8 +474,8 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
   {
     id: "retail-services",
     title: "Services",
-    subtitle: "Salon • Laundry • Concierge",
-    tags: ["Salon", "Laundry", "Concierge"],
+    subtitle: "Laundry • Concierge",
+    tags: ["Laundry", "Concierge"],
     description:
       "Everyday services you need, all conveniently located within VS Tower.",
     bg: "#1A1010",
@@ -1051,7 +1052,7 @@ function CarouselBottomSheet({
             onPress={() => onAction(item)}
             activeOpacity={0.85}
           >
-            <Text style={bss.actionBtnText}>Visit Website →</Text>
+            <Text style={bss.actionBtnText}>Learn More →</Text>
           </TouchableOpacity>
           <TouchableOpacity style={bss.dismissBtn} onPress={handleClose}>
             <Text style={bss.dismissText}>Dismiss</Text>
@@ -1462,7 +1463,6 @@ export default function VSScreen() {
         {/* Header */}
         <View style={s.header}>
           <View>
-            <Text style={s.eyebrow}>Explore</Text>
             <Text style={s.headerTitle}>More from VS Hotel Corp.</Text>
           </View>
           <View style={s.vsCircle}>
@@ -1472,7 +1472,6 @@ export default function VSScreen() {
 
         {/* Carousel */}
         <View style={s.carouselWrap}>
-          <Text style={s.sectionLabel}>MORE FROM VS HOTEL</Text>
           <FlatList
             data={CAROUSEL_ITEMS}
             keyExtractor={(i) => i.id}
@@ -1928,7 +1927,7 @@ const ct = StyleSheet.create({
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.green },
-  scroll: { flex: 1, backgroundColor: C.offWhite },
+  scroll: { flex: 1, backgroundColor: C.lavender },
   header: {
     flexDirection: "row",
     alignItems: "center",

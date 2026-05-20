@@ -1,3 +1,4 @@
+import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Dimensions,
@@ -23,6 +24,7 @@ const C = {
   offWhite: "#F8FAFC",
   gray: "#64748B",
   grayLight: "#E5E7EB",
+  lavender: "#F0EEF5",
   dark: "#0D1B12",
 };
 
@@ -58,7 +60,6 @@ export default function RoomDetailModal({ room, visible, onClose }: Props) {
       onRequestClose={onClose}
     >
       <View style={s.container}>
-        {/* ── MAIN SCROLL — everything inside, no gap ── */}
         <ScrollView
           style={s.scroll}
           showsVerticalScrollIndicator={false}
@@ -110,19 +111,19 @@ export default function RoomDetailModal({ room, visible, onClose }: Props) {
             {/* Quick Specs */}
             <View style={s.specsRow}>
               <View style={s.spec}>
-                <Text style={s.specIcon}>📐</Text>
+                <FontAwesome5 name="expand" size={18} color={C.gray} />
                 <Text style={s.specValue}>{room.size}</Text>
                 <Text style={s.specLabel}>Size</Text>
               </View>
               <View style={s.specDivider} />
               <View style={s.spec}>
-                <Text style={s.specIcon}>🛏</Text>
+                <FontAwesome5 name="bed" size={18} color={C.gray} />
                 <Text style={s.specValue}>{room.bedding}</Text>
                 <Text style={s.specLabel}>Bedding</Text>
               </View>
               <View style={s.specDivider} />
               <View style={s.spec}>
-                <Text style={s.specIcon}>👤</Text>
+                <FontAwesome5 name="user" size={18} color={C.gray} />
                 <Text style={s.specValue}>Up to {room.capacity}</Text>
                 <Text style={s.specLabel}>Guests</Text>
               </View>
@@ -164,7 +165,7 @@ export default function RoomDetailModal({ room, visible, onClose }: Props) {
                     <View style={s.facilityItems}>
                       {fac.items.map((item) => (
                         <View key={item} style={s.facilityItem}>
-                          <Text style={s.facilityDot}>✓</Text>
+                          <FontAwesome5 name="check" size={11} color={C.gold} />
                           <Text style={s.facilityText}>{item}</Text>
                         </View>
                       ))}
@@ -216,7 +217,12 @@ export default function RoomDetailModal({ room, visible, onClose }: Props) {
                     <View style={s.inclusionsList}>
                       {rate.inclusions.map((inc) => (
                         <View key={inc} style={s.inclusionItem}>
-                          <Text style={s.inclusionDot}>•</Text>
+                          <FontAwesome5
+                            name="circle"
+                            size={5}
+                            color={C.gold}
+                            solid
+                          />
                           <Text style={s.inclusionText}>{inc}</Text>
                         </View>
                       ))}
@@ -230,7 +236,7 @@ export default function RoomDetailModal({ room, visible, onClose }: Props) {
           </View>
         </ScrollView>
 
-        {/* ── FOOTER — always visible at bottom ── */}
+        {/* Footer */}
         <View style={s.footer}>
           <View>
             <Text style={s.footerRateName}>{selectedRate.name}</Text>
@@ -252,7 +258,6 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.offWhite },
   scroll: { flex: 1 },
 
-  // Gallery
   galleryWrap: { position: "relative" },
   heroImage: { width: SW, height: 220 },
   closeBtn: {
@@ -278,7 +283,6 @@ const s = StyleSheet.create({
   },
   imageCounterText: { color: C.white, fontSize: 12, fontWeight: "600" },
 
-  // Thumbnails
   thumbRow: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -294,11 +298,7 @@ const s = StyleSheet.create({
   },
   thumbActive: { borderColor: C.gold },
 
-  // Content
-  content: {
-    padding: 20,
-    paddingTop: 16,
-  },
+  content: { padding: 20, paddingTop: 16 },
   roomName: { fontSize: 24, fontWeight: "900", color: C.dark, marginBottom: 6 },
   description: {
     fontSize: 13,
@@ -307,7 +307,6 @@ const s = StyleSheet.create({
     marginBottom: 16,
   },
 
-  // Specs
   specsRow: {
     flexDirection: "row",
     backgroundColor: C.white,
@@ -319,8 +318,7 @@ const s = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  spec: { flex: 1, alignItems: "center", gap: 3 },
-  specIcon: { fontSize: 20 },
+  spec: { flex: 1, alignItems: "center", gap: 6 },
   specValue: {
     fontSize: 13,
     fontWeight: "700",
@@ -330,7 +328,6 @@ const s = StyleSheet.create({
   specLabel: { fontSize: 11, color: C.gray },
   specDivider: { width: 1, backgroundColor: C.grayLight, marginHorizontal: 8 },
 
-  // Tabs
   tabs: {
     flexDirection: "row",
     backgroundColor: C.grayLight,
@@ -343,10 +340,8 @@ const s = StyleSheet.create({
   tabText: { fontSize: 14, fontWeight: "600", color: C.gray },
   tabTextActive: { color: C.green, fontWeight: "800" },
 
-  // Section
   section: { gap: 12 },
 
-  // Facilities
   facilityGroup: {
     backgroundColor: C.white,
     borderRadius: 14,
@@ -365,11 +360,9 @@ const s = StyleSheet.create({
     marginBottom: 8,
   },
   facilityItems: { gap: 5 },
-  facilityItem: { flexDirection: "row", gap: 8, alignItems: "flex-start" },
-  facilityDot: { color: C.gold, fontWeight: "700", fontSize: 13 },
+  facilityItem: { flexDirection: "row", gap: 8, alignItems: "center" },
   facilityText: { fontSize: 13, color: C.gray, flex: 1 },
 
-  // Rates
   rateCard: {
     backgroundColor: C.white,
     borderRadius: 14,
@@ -404,11 +397,9 @@ const s = StyleSheet.create({
     backgroundColor: C.green,
   },
   inclusionsList: { gap: 4 },
-  inclusionItem: { flexDirection: "row", gap: 6, alignItems: "flex-start" },
-  inclusionDot: { color: C.gold, fontWeight: "700", marginTop: 1 },
+  inclusionItem: { flexDirection: "row", gap: 6, alignItems: "center" },
   inclusionText: { fontSize: 12, color: C.gray, flex: 1, lineHeight: 18 },
 
-  // Footer
   footer: {
     flexDirection: "row",
     alignItems: "center",

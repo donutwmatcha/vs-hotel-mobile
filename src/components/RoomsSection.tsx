@@ -1,9 +1,10 @@
 // src/components/RoomsSection.tsx
 import { FontAwesome5 } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
   Image,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,10 +20,10 @@ const C = {
   offWhite: "#F5F5F5",
   gray: "#64748B",
   grayLight: "#E2E8F0",
+  lavender: "#f0eef5",
   dark: "#0F172A",
 };
 
-// Show only first 4 rooms as a preview
 const PREVIEW_ROOMS = ROOMS.slice(0, 4);
 
 export default function RoomsSection() {
@@ -51,7 +52,9 @@ export default function RoomsSection() {
         contentContainerStyle={s.scrollContent}
       >
         {PREVIEW_ROOMS.map((room) => {
-          const lowestRate = Math.min(...room.rates.map((r) => r.pricePerNight));
+          const lowestRate = Math.min(
+            ...room.rates.map((r) => r.pricePerNight),
+          );
           return (
             <TouchableOpacity
               key={room.id}
@@ -78,12 +81,15 @@ export default function RoomsSection() {
                   {room.name}
                 </Text>
 
+                {/* Pills with icons instead of emojis */}
                 <View style={s.pillsRow}>
                   <View style={s.pill}>
-                    <Text style={s.pillText}>📐 {room.size}</Text>
+                    <FontAwesome5 name="expand" size={9} color={C.gray} />
+                    <Text style={s.pillText}>{room.size}</Text>
                   </View>
                   <View style={s.pill}>
-                    <Text style={s.pillText}>🛏 {room.bedding}</Text>
+                    <FontAwesome5 name="bed" size={9} color={C.gray} />
+                    <Text style={s.pillText}>{room.bedding}</Text>
                   </View>
                 </View>
 
@@ -95,9 +101,16 @@ export default function RoomsSection() {
                       <Text style={s.perNight}>/night</Text>
                     </Text>
                   </View>
-                  <View style={s.bookChip}>
+                  <TouchableOpacity
+                    style={s.bookChip}
+                    onPress={() =>
+                      Linking.openURL(
+                        "https://www.swiftbook.io/inst/#home?propertyId=363MjIpd9DKOxXNT5Koe1JFI0MzQ=&JDRN=Y",
+                      ).catch(() => {})
+                    }
+                  >
                     <Text style={s.bookChipText}>Book</Text>
-                  </View>
+                  </TouchableOpacity>
                 </View>
               </View>
             </TouchableOpacity>
@@ -161,15 +174,11 @@ const s = StyleSheet.create({
     fontWeight: "700",
     color: C.green,
   },
-
-  // Scroll
   scrollContent: {
     paddingHorizontal: 20,
     gap: 14,
     paddingBottom: 4,
   },
-
-  // Room card
   card: {
     width: 220,
     backgroundColor: C.white,
@@ -225,6 +234,9 @@ const s = StyleSheet.create({
     paddingVertical: 3,
     borderWidth: 1,
     borderColor: C.grayLight,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   pillText: {
     fontSize: 10,
@@ -265,8 +277,6 @@ const s = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
   },
-
-  // More card
   moreCard: {
     width: 110,
     backgroundColor: C.green,

@@ -1,3 +1,4 @@
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -10,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 
 export default function SignUpScreen() {
@@ -61,10 +63,11 @@ export default function SignUpScreen() {
       if (error) throw error;
 
       if (data.user) {
-        router.push({
-          pathname: "/verify",
-          params: { email },
-        });
+        Alert.alert(
+          "Welcome to VS Hotel! 🎉",
+          "Your account has been created.",
+          [{ text: "Continue", onPress: () => router.replace("/") }],
+        );
       }
     } catch (error: any) {
       Alert.alert("Sign Up Failed", error.message);
@@ -74,181 +77,217 @@ export default function SignUpScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "#1B4332" }}
+      edges={["top"]}
     >
-      <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
-        <View
-          style={{
-            backgroundColor: "#14532D",
-            paddingTop: 50,
-            paddingBottom: 30,
-            paddingHorizontal: 20,
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{ marginBottom: 16 }}
-          >
-            <Text style={{ color: "#86EFAC", fontSize: 16 }}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={{ color: "white", fontSize: 28, fontWeight: "bold" }}>
-            Create Account
-          </Text>
-          <Text style={{ color: "#86EFAC", marginTop: 4, fontSize: 14 }}>
-            Join VS Hotel and start earning points
-          </Text>
-        </View>
-
-        <View
-          style={{
-            backgroundColor: "#F0FDF4",
-            borderLeftWidth: 4,
-            borderLeftColor: "#C89B3C",
-            margin: 20,
-            padding: 16,
-            borderRadius: 12,
-          }}
-        >
-          <Text
-            style={{ fontWeight: "bold", color: "#14532D", marginBottom: 4 }}
-          >
-            🎁 Join for Free and Get:
-          </Text>
-          <Text style={{ color: "#4B5563", fontSize: 13, lineHeight: 20 }}>
-            ✓ Exclusive member-only rates{"\n"}✓ VS Points on every stay{"\n"}✓
-            Early access to flash sales{"\n"}✓ Birthday bonus points
-          </Text>
-        </View>
-
-        <View style={{ paddingHorizontal: 20, gap: 16 }}>
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={labelStyle}>FIRST NAME</Text>
-              <TextInput
-                value={firstName}
-                onChangeText={setFirstName}
-                placeholder="Juan"
-                style={inputStyle}
-                placeholderTextColor="#94A3B8"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={labelStyle}>LAST NAME</Text>
-              <TextInput
-                value={lastName}
-                onChangeText={setLastName}
-                placeholder="Dela Cruz"
-                style={inputStyle}
-                placeholderTextColor="#94A3B8"
-              />
-            </View>
-          </View>
-
-          <View>
-            <Text style={labelStyle}>EMAIL ADDRESS</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="juan@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={inputStyle}
-              placeholderTextColor="#94A3B8"
-            />
-          </View>
-
-          <View>
-            <Text style={labelStyle}>PHONE NUMBER</Text>
-            <TextInput
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="+63 917 000 0000"
-              keyboardType="phone-pad"
-              style={inputStyle}
-              placeholderTextColor="#94A3B8"
-            />
-          </View>
-
-          <View>
-            <Text style={labelStyle}>PASSWORD</Text>
-            <View style={{ position: "relative" }}>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="At least 6 characters"
-                secureTextEntry={!showPassword}
-                style={inputStyle}
-                placeholderTextColor="#94A3B8"
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={{ position: "absolute", right: 14, top: 14 }}
-              >
-                <Text style={{ color: "#64748B", fontSize: 13 }}>
-                  {showPassword ? "Hide" : "Show"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View>
-            <Text style={labelStyle}>CONFIRM PASSWORD</Text>
-            <View style={{ position: "relative" }}>
-              <TextInput
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Repeat your password"
-                secureTextEntry={!showConfirm}
-                style={inputStyle}
-                placeholderTextColor="#94A3B8"
-              />
-              <TouchableOpacity
-                onPress={() => setShowConfirm(!showConfirm)}
-                style={{ position: "absolute", right: 14, top: 14 }}
-              >
-                <Text style={{ color: "#64748B", fontSize: 13 }}>
-                  {showConfirm ? "Hide" : "Show"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            onPress={handleSignUp}
-            disabled={loading}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
+          {/* Header */}
+          <View
             style={{
-              backgroundColor: loading ? "#94A3B8" : "#14532D",
-              paddingVertical: 16,
-              borderRadius: 30,
-              alignItems: "center",
-              marginTop: 8,
+              backgroundColor: "#1B4332",
+              paddingTop: 12,
+              paddingBottom: 30,
+              paddingHorizontal: 20,
             }}
           >
-            <Text style={{ color: "white", fontWeight: "bold", fontSize: 18 }}>
-              {loading ? "Creating Account..." : "Create Account"}
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                marginBottom: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Ionicons name="arrow-back" size={22} color="#86EFAC" />
+            </TouchableOpacity>
+            <Text style={{ color: "white", fontSize: 28, fontWeight: "bold" }}>
+              Create Account
             </Text>
-          </TouchableOpacity>
+            <Text style={{ color: "#86EFAC", marginTop: 4, fontSize: 14 }}>
+              Join VS Hotel and start earning points
+            </Text>
+          </View>
 
-          <TouchableOpacity
-            onPress={() => router.push("/signin")}
+          {/* Benefits card */}
+          <View
             style={{
-              alignItems: "center",
-              paddingVertical: 12,
-              marginBottom: 40,
+              backgroundColor: "#F0EEF5",
+              borderLeftWidth: 4,
+              borderLeftColor: "#B8860B",
+              margin: 20,
+              padding: 16,
+              borderRadius: 12,
             }}
           >
-            <Text style={{ color: "#64748B", fontSize: 14 }}>
-              Already have an account?{" "}
-              <Text style={{ color: "#14532D", fontWeight: "bold" }}>
-                Sign In
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 8,
+              }}
+            >
+              <FontAwesome5 name="star" size={14} color="#B8860B" solid />
+              <Text
+                style={{ fontWeight: "bold", color: "#1B4332", fontSize: 14 }}
+              >
+                Join for Free and Get:
               </Text>
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            </View>
+            <View style={{ gap: 4 }}>
+              {[
+                "Exclusive member-only rates",
+                "VS Points on every stay",
+                "Early access to flash sales",
+                "Birthday bonus points",
+              ].map((perk, i) => (
+                <View
+                  key={i}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+                >
+                  <Ionicons name="checkmark-circle" size={16} color="#1B4332" />
+                  <Text style={{ color: "#4B5563", fontSize: 13 }}>{perk}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={{ paddingHorizontal: 20, gap: 16 }}>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={labelStyle}>FIRST NAME</Text>
+                <TextInput
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="Juan"
+                  style={inputStyle}
+                  placeholderTextColor="#94A3B8"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={labelStyle}>LAST NAME</Text>
+                <TextInput
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Dela Cruz"
+                  style={inputStyle}
+                  placeholderTextColor="#94A3B8"
+                />
+              </View>
+            </View>
+
+            <View>
+              <Text style={labelStyle}>EMAIL ADDRESS</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="juan@email.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={inputStyle}
+                placeholderTextColor="#94A3B8"
+              />
+            </View>
+
+            <View>
+              <Text style={labelStyle}>PHONE NUMBER</Text>
+              <TextInput
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="+63 917 000 0000"
+                keyboardType="phone-pad"
+                style={inputStyle}
+                placeholderTextColor="#94A3B8"
+              />
+            </View>
+
+            <View>
+              <Text style={labelStyle}>PASSWORD</Text>
+              <View style={{ position: "relative" }}>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="At least 6 characters"
+                  secureTextEntry={!showPassword}
+                  style={inputStyle}
+                  placeholderTextColor="#94A3B8"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={{ position: "absolute", right: 14, top: 14 }}
+                >
+                  <Text style={{ color: "#64748B", fontSize: 13 }}>
+                    {showPassword ? "Hide" : "Show"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View>
+              <Text style={labelStyle}>CONFIRM PASSWORD</Text>
+              <View style={{ position: "relative" }}>
+                <TextInput
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Repeat your password"
+                  secureTextEntry={!showConfirm}
+                  style={inputStyle}
+                  placeholderTextColor="#94A3B8"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConfirm(!showConfirm)}
+                  style={{ position: "absolute", right: 14, top: 14 }}
+                >
+                  <Text style={{ color: "#64748B", fontSize: 13 }}>
+                    {showConfirm ? "Hide" : "Show"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={handleSignUp}
+              disabled={loading}
+              style={{
+                backgroundColor: loading ? "#94A3B8" : "#1B4332",
+                paddingVertical: 16,
+                borderRadius: 30,
+                alignItems: "center",
+                marginTop: 8,
+              }}
+            >
+              <Text
+                style={{ color: "white", fontWeight: "bold", fontSize: 18 }}
+              >
+                {loading ? "Creating Account..." : "Create Account"}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push("/signin")}
+              style={{
+                alignItems: "center",
+                paddingVertical: 12,
+                marginBottom: 40,
+              }}
+            >
+              <Text style={{ color: "#64748B", fontSize: 14 }}>
+                Already have an account?{" "}
+                <Text style={{ color: "#1B4332", fontWeight: "bold" }}>
+                  Log In
+                </Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
