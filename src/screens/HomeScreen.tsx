@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import MemberCard from "../components/MemberCard";
 import MembershipBanner from "../components/MembershipBanner";
 import RoomsSection from "../components/RoomsSection";
 import { supabase } from "../lib/supabase";
@@ -109,6 +110,7 @@ export default function HomeScreen() {
   const [currentPromo, setCurrentPromo] = useState(0);
   const [userName, setUserName] = useState<string | null>(null);
   const [userPoints, setUserPoints] = useState<number | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [memberRank, setMemberRank] = useState<string>("Silver Member");
   const [weather, setWeather] = useState<{
     temp: string;
@@ -149,9 +151,11 @@ export default function HomeScreen() {
       const firstName = user.user_metadata?.first_name;
       setUserName(firstName || user.email?.split("@")[0] || null);
       setUserPoints(120);
+      setUserId(user.id);
     } else {
       setUserName(null);
       setUserPoints(null);
+      setUserId(null);
     }
   }
 
@@ -187,7 +191,7 @@ export default function HomeScreen() {
       >
         <Image
           source={require("../assets/images/main-logo-white.png")}
-          style={{ width: 450, height: 70, marginLeft: -150 }}
+          style={{ width: 480, height: 90, marginLeft: -150 }}
           resizeMode="contain"
         />
       </View>
@@ -378,6 +382,16 @@ export default function HomeScreen() {
           )}
         </View>
       </View>
+
+      {/* ── MEMBER CARD ── */}
+      {userName && (
+        <MemberCard
+          userId={userId ?? ""}
+          userName={userName}
+          memberRank={memberRank}
+          points={userPoints ?? 0}
+        />
+      )}
 
       {/* ── ROOMS ── */}
       <RoomsSection />

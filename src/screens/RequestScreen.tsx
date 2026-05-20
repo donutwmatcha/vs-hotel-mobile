@@ -13,13 +13,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // ← add this
+import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 
-// ─── Color tokens ────────────────────────────────────────────────────────────
 const C = {
-  green: "#1B4332",
-  greenLight: "#2D6A4F",
+  green: "#14532D",
+  greenLight: "#1a6b3c",
   greenMint: "#EAF4EE",
   gold: "#B8860B",
   goldLight: "#D4A017",
@@ -31,11 +30,9 @@ const C = {
   red: "#EF4444",
 };
 
-// ─── Request Categories ───────────────────────────────────────────────────────
 type Category = {
   id: string;
   label: string;
-  // icon is now a render function so each card can pass its own color/size
   icon: (color: string) => React.ReactNode;
   color: string;
   options: string[];
@@ -107,7 +104,6 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-// ─── Chip Component ───────────────────────────────────────────────────────────
 const Chip = ({
   label,
   selected,
@@ -128,7 +124,6 @@ const Chip = ({
   </TouchableOpacity>
 );
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function RequestScreen() {
   const [activeTab, setActiveTab] = useState<"request" | "comment">("request");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
@@ -138,7 +133,6 @@ export default function RequestScreen() {
   const [roomNumber, setRoomNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [rating, setRating] = useState(0);
   const [commentText, setCommentText] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
@@ -150,7 +144,6 @@ export default function RequestScreen() {
     setNotes("");
   };
 
-  // ── Submit Request ──────────────────────────────────────────────────────────
   const handleSubmitRequest = async () => {
     if (!selectedCategory) {
       Alert.alert("Missing Info", "Please select a request type.");
@@ -175,9 +168,7 @@ export default function RequestScreen() {
         status: "pending",
         created_at: new Date().toISOString(),
       });
-
       if (error) throw error;
-
       Alert.alert(
         "Request Sent!",
         "Our team has received your request and will attend to you shortly.",
@@ -193,7 +184,6 @@ export default function RequestScreen() {
     }
   };
 
-  // ── Submit Comment ──────────────────────────────────────────────────────────
   const handleSubmitComment = async () => {
     if (rating === 0) {
       Alert.alert("Missing Rating", "Please give us a star rating.");
@@ -214,9 +204,7 @@ export default function RequestScreen() {
         comment: commentText.trim(),
         created_at: new Date().toISOString(),
       });
-
       if (error) throw error;
-
       Alert.alert("Thank You!", "Your feedback helps us serve you better.", [
         {
           text: "Done",
@@ -237,63 +225,63 @@ export default function RequestScreen() {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor={C.green} />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
+      {/* ── Green header block ── */}
+      <View style={styles.headerBlock}>
+        {/* Header text only — headphone icon removed */}
+        <View style={styles.header}>
           <Text style={styles.headerEyebrow}>How can we help?</Text>
           <Text style={styles.headerTitle}>Requests & Feedback</Text>
         </View>
-        {/* Header icon */}
-        <View style={styles.headerIconWrap}>
-          <Ionicons name="headset-outline" size={24} color={C.gold} />
+
+        {/* Tab Toggle inside green block so no gap */}
+        <View style={styles.tabRow}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "request" && styles.tabActive]}
+            onPress={() => setActiveTab("request")}
+          >
+            <MaterialCommunityIcons
+              name="bell-ring-outline"
+              size={16}
+              color={
+                activeTab === "request" ? C.white : "rgba(255,255,255,0.6)"
+              }
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "request" && styles.tabTextActive,
+              ]}
+            >
+              Make a Request
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "comment" && styles.tabActive]}
+            onPress={() => setActiveTab("comment")}
+          >
+            <Ionicons
+              name="chatbubble-outline"
+              size={15}
+              color={
+                activeTab === "comment" ? C.white : "rgba(255,255,255,0.6)"
+              }
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "comment" && styles.tabTextActive,
+              ]}
+            >
+              Leave Feedback
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Tab Toggle */}
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "request" && styles.tabActive]}
-          onPress={() => setActiveTab("request")}
-        >
-          <MaterialCommunityIcons
-            name="bell-ring-outline"
-            size={16}
-            color={activeTab === "request" ? C.white : "rgba(255,255,255,0.6)"}
-            style={styles.tabIcon}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "request" && styles.tabTextActive,
-            ]}
-          >
-            Make a Request
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "comment" && styles.tabActive]}
-          onPress={() => setActiveTab("comment")}
-        >
-          <Ionicons
-            name="chatbubble-outline"
-            size={15}
-            color={activeTab === "comment" ? C.white : "rgba(255,255,255,0.6)"}
-            style={styles.tabIcon}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "comment" && styles.tabTextActive,
-            ]}
-          >
-            Leave Feedback
-          </Text>
-        </TouchableOpacity>
-      </View>
-
+      {/* ── Scrollable content ── */}
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={{ flex: 1, backgroundColor: C.offWhite }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
@@ -302,10 +290,8 @@ export default function RequestScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* ── REQUEST TAB ── */}
           {activeTab === "request" && (
             <>
-              {/* Room Number */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Your Room Number</Text>
                 <View style={styles.inputRow}>
@@ -326,13 +312,11 @@ export default function RequestScreen() {
                 </View>
               </View>
 
-              {/* Category Selection */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Request Type</Text>
                 <View style={styles.categoryGrid}>
                   {CATEGORIES.map((cat) => {
                     const isActive = selectedCategory?.id === cat.id;
-                    const iconColor = isActive ? C.green : C.gray;
                     return (
                       <TouchableOpacity
                         key={cat.id}
@@ -347,7 +331,7 @@ export default function RequestScreen() {
                         activeOpacity={0.85}
                       >
                         <View style={styles.categoryIconWrap}>
-                          {cat.icon(iconColor)}
+                          {cat.icon(isActive ? C.green : C.gray)}
                         </View>
                         <Text
                           style={[
@@ -363,7 +347,6 @@ export default function RequestScreen() {
                 </View>
               </View>
 
-              {/* Option Chips */}
               {selectedCategory && (
                 <View style={styles.section}>
                   <Text style={styles.sectionLabel}>
@@ -382,7 +365,6 @@ export default function RequestScreen() {
                 </View>
               )}
 
-              {/* Notes */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>
                   Additional Notes (optional)
@@ -410,7 +392,6 @@ export default function RequestScreen() {
                 </View>
               </View>
 
-              {/* Submit */}
               <TouchableOpacity
                 style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
                 onPress={handleSubmitRequest}
@@ -429,7 +410,6 @@ export default function RequestScreen() {
             </>
           )}
 
-          {/* ── COMMENT TAB ── */}
           {activeTab === "comment" && (
             <>
               <View style={styles.section}>
@@ -519,18 +499,19 @@ export default function RequestScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: C.green },
+  // SafeAreaView bg matches offWhite so no green bleed at bottom
+  safe: { flex: 1, backgroundColor: C.offWhite },
 
+  // Single green block for header + tabs — no gap, no bar
+  headerBlock: {
+    backgroundColor: C.green,
+    paddingBottom: 12,
+  },
   header: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 20,
-    backgroundColor: C.green,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    paddingBottom: 16,
   },
   headerEyebrow: {
     fontSize: 12,
@@ -545,21 +526,11 @@ const styles = StyleSheet.create({
     color: C.white,
     marginTop: 2,
   },
-  headerIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
 
   // Tabs
   tabRow: {
     flexDirection: "row",
-    backgroundColor: C.green,
     paddingHorizontal: 20,
-    paddingBottom: 0,
     gap: 8,
   },
   tab: {
@@ -572,25 +543,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
   },
-  tabActive: {
-    backgroundColor: C.gold,
-  },
-  tabIcon: { marginRight: 2 },
-  tabText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.7)",
-  },
-  tabTextActive: {
-    color: C.white,
-  },
+  tabActive: { backgroundColor: C.gold },
+  tabText: { fontSize: 12, fontWeight: "600", color: "rgba(255,255,255,0.7)" },
+  tabTextActive: { color: C.white },
 
+  // Scroll
   scroll: {
     flex: 1,
     backgroundColor: C.offWhite,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    marginTop: 12,
   },
   scrollContent: {
     paddingTop: 24,
@@ -607,7 +569,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Input with icon
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -627,12 +588,7 @@ const styles = StyleSheet.create({
   textarea: { height: 80 },
   textareaLarge: { height: 140 },
 
-  // Category grid
-  categoryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   categoryCard: {
     width: "47%",
     backgroundColor: C.white,
@@ -647,10 +603,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  categoryCardActive: {
-    borderColor: C.green,
-    backgroundColor: C.greenMint,
-  },
+  categoryCardActive: { borderColor: C.green, backgroundColor: C.greenMint },
   categoryIconWrap: { marginBottom: 8 },
   categoryLabel: {
     fontSize: 13,
@@ -660,12 +613,7 @@ const styles = StyleSheet.create({
   },
   categoryLabelActive: { color: C.green },
 
-  // Chips
-  chipWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
+  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -674,23 +622,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: C.grayLight,
   },
-  chipSelected: {
-    backgroundColor: C.green,
-    borderColor: C.green,
-  },
+  chipSelected: { backgroundColor: C.green, borderColor: C.green },
   chipText: { fontSize: 13, color: C.gray, fontWeight: "500" },
   chipTextSelected: { color: C.white, fontWeight: "700" },
 
-  // Stars
   starsRow: { flexDirection: "row", gap: 8, marginBottom: 6 },
-  ratingLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: C.gold,
-    marginTop: 4,
-  },
+  ratingLabel: { fontSize: 14, fontWeight: "700", color: C.gold, marginTop: 4 },
 
-  // Submit
   submitBtn: {
     backgroundColor: C.green,
     borderRadius: 14,
@@ -704,11 +642,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   submitBtnDisabled: { opacity: 0.6 },
-  submitBtnInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
+  submitBtnInner: { flexDirection: "row", alignItems: "center", gap: 8 },
   submitBtnText: {
     color: C.white,
     fontSize: 16,

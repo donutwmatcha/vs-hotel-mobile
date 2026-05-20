@@ -59,7 +59,7 @@ export default function TabLayout() {
           title: "Request",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "hand-left" : "hand-left-outline"}
+              name={focused ? "clipboard" : "clipboard-outline"}
               size={26}
               color={color}
             />

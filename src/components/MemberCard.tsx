@@ -10,9 +10,9 @@ const C = {
   gold: "#C89B3C",
   goldLight: "#D4A017",
   white: "#FFFFFF",
-  lavender: "#F0EEF5",
-  lavenderDark: "#D8D4E8",
+  offWhite: "#F8FAFC",
   gray: "#64748B",
+  grayLight: "#E5E7EB",
 };
 
 interface Props {
@@ -28,6 +28,7 @@ export default function MemberCard({
   memberRank,
   points,
 }: Props) {
+  // QR code contains member ID + name so staff can identify the guest
   const qrData = JSON.stringify({
     id: userId,
     name: userName,
@@ -35,11 +36,10 @@ export default function MemberCard({
   });
 
   const shortId = userId.slice(0, 8).toUpperCase();
-  const memberNumber = "VS-" + shortId;
 
   return (
     <View style={s.card}>
-      {/* Top row */}
+      {/* Top row — hotel name + rank badge */}
       <View style={s.topRow}>
         <View>
           <Text style={s.hotelLabel}>VS HOTEL</Text>
@@ -54,16 +54,14 @@ export default function MemberCard({
       {/* Divider */}
       <View style={s.divider} />
 
-      {/* Middle row */}
+      {/* Middle row — member info + QR code */}
       <View style={s.middleRow}>
         {/* Left — member details */}
         <View style={s.memberInfo}>
           <Text style={s.memberLabel}>MEMBER NAME</Text>
           <Text style={s.memberName}>{userName}</Text>
-
-          <Text style={[s.memberLabel, { marginTop: 12 }]}>MEMBER NO.</Text>
-          <Text style={s.memberId}>{memberNumber}</Text>
-
+          <Text style={[s.memberLabel, { marginTop: 12 }]}>MEMBER ID</Text>{" "}
+          <Text style={s.memberId}>VS-{shortId}</Text>
           <View style={s.pointsRow}>
             <Ionicons name="star" size={13} color={C.gold} />
             <Text style={s.pointsText}>
@@ -78,15 +76,15 @@ export default function MemberCard({
             value={qrData}
             size={100}
             color={C.green}
-            backgroundColor={C.lavender}
+            backgroundColor={C.white}
           />
           <Text style={s.qrHint}>Show at front desk</Text>
         </View>
       </View>
 
-      {/* Bottom strip */}
+      {/* Bottom decorative strip */}
       <View style={s.bottomStrip}>
-        <FontAwesome5 name="hotel" size={11} color={C.green} />
+        <FontAwesome5 name="hotel" size={11} color="rgba(255,255,255,0.5)" />
         <Text style={s.stripText}>Victoria Sports Hotel Convention Center</Text>
       </View>
     </View>
@@ -98,15 +96,13 @@ const s = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 20,
     borderRadius: 20,
-    backgroundColor: C.lavender,
+    backgroundColor: C.green,
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
-    borderWidth: 1.5,
-    borderColor: C.lavenderDark,
   },
   topRow: {
     flexDirection: "row",
@@ -119,32 +115,34 @@ const s = StyleSheet.create({
   hotelLabel: {
     fontSize: 10,
     fontWeight: "800",
-    color: C.gold,
+    color: C.goldLight,
     letterSpacing: 2,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: "900",
-    color: C.green,
+    color: C.white,
     marginTop: 2,
   },
   rankBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: C.green,
+    backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(200,155,60,0.4)",
   },
   rankText: {
-    color: C.white,
+    color: C.gold,
     fontSize: 12,
     fontWeight: "800",
   },
   divider: {
     height: 1,
-    backgroundColor: C.lavenderDark,
+    backgroundColor: "rgba(255,255,255,0.15)",
     marginHorizontal: 20,
   },
   middleRow: {
@@ -161,19 +159,19 @@ const s = StyleSheet.create({
   memberLabel: {
     fontSize: 9,
     fontWeight: "700",
-    color: C.gray,
+    color: "rgba(255,255,255,0.5)",
     letterSpacing: 1.5,
     marginBottom: 3,
   },
   memberName: {
     fontSize: 17,
     fontWeight: "800",
-    color: C.green,
+    color: C.white,
   },
   memberId: {
     fontSize: 13,
-    fontWeight: "700",
-    color: C.green,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.7)",
     fontFamily: "monospace",
     marginTop: 3,
   },
@@ -182,7 +180,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 5,
     marginTop: 14,
-    backgroundColor: C.green,
+    backgroundColor: "rgba(255,255,255,0.1)",
     alignSelf: "flex-start",
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -196,11 +194,9 @@ const s = StyleSheet.create({
   qrWrap: {
     alignItems: "center",
     gap: 6,
-    backgroundColor: C.lavender,
+    backgroundColor: C.white,
     borderRadius: 14,
     padding: 10,
-    borderWidth: 1,
-    borderColor: C.lavenderDark,
   },
   qrHint: {
     fontSize: 9,
@@ -209,7 +205,7 @@ const s = StyleSheet.create({
     textAlign: "center",
   },
   bottomStrip: {
-    backgroundColor: C.lavenderDark,
+    backgroundColor: "rgba(0,0,0,0.2)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -217,7 +213,7 @@ const s = StyleSheet.create({
     paddingVertical: 8,
   },
   stripText: {
-    color: C.green,
+    color: "rgba(255,255,255,0.5)",
     fontSize: 10,
     fontWeight: "600",
     letterSpacing: 0.5,
