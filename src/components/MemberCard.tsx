@@ -15,11 +15,19 @@ const C = {
   grayLight: "#E5E7EB",
 };
 
+interface CheckIn {
+  id: string;
+  checked_in_at: string;
+  points_awarded: number;
+  action: string;
+}
+
 interface Props {
   userId: string;
   userName: string;
   memberRank: string;
   points: number;
+  lastCheckIn?: CheckIn | null;
 }
 
 export default function MemberCard({
@@ -27,8 +35,8 @@ export default function MemberCard({
   userName,
   memberRank,
   points,
+  lastCheckIn,
 }: Props) {
-  // QR code contains member ID + name so staff can identify the guest
   const qrData = JSON.stringify({
     id: userId,
     name: userName,
@@ -37,9 +45,25 @@ export default function MemberCard({
 
   const shortId = userId.slice(0, 8).toUpperCase();
 
+  const checkInTime = lastCheckIn
+    ? new Date(lastCheckIn.checked_in_at).toLocaleTimeString("en-PH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : null;
+
+  const checkInDate = lastCheckIn
+    ? new Date(lastCheckIn.checked_in_at).toLocaleDateString("en-PH", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
+
   return (
     <View style={s.card}>
-      {/* Top row — hotel name + rank badge */}
+      {/* Top row */}
       <View style={s.topRow}>
         <View>
           <Text style={s.hotelLabel}>VS HOTEL</Text>
@@ -51,16 +75,41 @@ export default function MemberCard({
         </View>
       </View>
 
+      {/* Check-in status banner */}
+      {lastCheckIn ? (
+        <View style={s.checkedInBanner}>
+          <View style={s.checkedInDot} />
+          <View style={{ flex: 1 }}>
+            <Text style={s.checkedInLabel}>
+              {lastCheckIn.action ?? "Check-In"} Today
+            </Text>
+            <Text style={s.checkedInTime}>
+              {checkInDate} {"•"} {checkInTime} {"•"} +
+              {lastCheckIn.points_awarded} pts
+            </Text>
+          </View>
+          <Ionicons name="checkmark-circle" size={20} color="#86EFAC" />
+        </View>
+      ) : (
+        <View style={s.notCheckedInBanner}>
+          <Ionicons
+            name="time-outline"
+            size={14}
+            color="rgba(255,255,255,0.4)"
+          />
+          <Text style={s.notCheckedInText}>Not yet checked in today</Text>
+        </View>
+      )}
+
       {/* Divider */}
       <View style={s.divider} />
 
-      {/* Middle row — member info + QR code */}
+      {/* Middle row */}
       <View style={s.middleRow}>
-        {/* Left — member details */}
         <View style={s.memberInfo}>
           <Text style={s.memberLabel}>MEMBER NAME</Text>
           <Text style={s.memberName}>{userName}</Text>
-          <Text style={[s.memberLabel, { marginTop: 12 }]}>MEMBER ID</Text>{" "}
+          <Text style={[s.memberLabel, { marginTop: 12 }]}>MEMBER ID</Text>
           <Text style={s.memberId}>VS-{shortId}</Text>
           <View style={s.pointsRow}>
             <Ionicons name="star" size={13} color={C.gold} />
@@ -70,7 +119,6 @@ export default function MemberCard({
           </View>
         </View>
 
-        {/* Right — QR code */}
         <View style={s.qrWrap}>
           <QRCode
             value={qrData}
@@ -82,7 +130,7 @@ export default function MemberCard({
         </View>
       </View>
 
-      {/* Bottom decorative strip */}
+      {/* Bottom strip */}
       <View style={s.bottomStrip}>
         <FontAwesome5 name="hotel" size={11} color="rgba(255,255,255,0.5)" />
         <Text style={s.stripText}>Victoria Sports Hotel Convention Center</Text>
@@ -140,6 +188,48 @@ const s = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
   },
+  checkedInBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "rgba(34,197,94,0.2)",
+    borderWidth: 1,
+    borderColor: "rgba(134,239,172,0.3)",
+    marginHorizontal: 16,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  checkedInDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#86EFAC",
+  },
+  checkedInLabel: {
+    color: "#86EFAC",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  checkedInTime: {
+    color: "rgba(134,239,172,0.7)",
+    fontSize: 11,
+    marginTop: 1,
+  },
+  notCheckedInBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    opacity: 0.5,
+  },
+  notCheckedInText: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 11,
+    fontStyle: "italic",
+  },
   divider: {
     height: 1,
     backgroundColor: "rgba(255,255,255,0.15)",
@@ -153,9 +243,7 @@ const s = StyleSheet.create({
     paddingVertical: 18,
     gap: 16,
   },
-  memberInfo: {
-    flex: 1,
-  },
+  memberInfo: { flex: 1 },
   memberLabel: {
     fontSize: 9,
     fontWeight: "700",

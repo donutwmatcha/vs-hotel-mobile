@@ -17,7 +17,7 @@ import {
 import MemberCard from "../components/MemberCard";
 import MembershipBanner from "../components/MembershipBanner";
 import RoomsSection from "../components/RoomsSection";
-import { supabase } from "../lib/supabase";
+import { useAuth } from "../context/AuthContext";
 
 // ─── Brand colors ─────────────────────────────────────────────────────────────
 const C = {
@@ -107,11 +107,8 @@ const DEALS = [
 ];
 
 export default function HomeScreen() {
+  const { user, profile, lastCheckIn, refreshProfile } = useAuth();
   const [currentPromo, setCurrentPromo] = useState(0);
-  const [userName, setUserName] = useState<string | null>(null);
-  const [userPoints, setUserPoints] = useState<number | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [memberRank, setMemberRank] = useState<string>("Silver Member");
   const [weather, setWeather] = useState<{
     temp: string;
     label: string;
@@ -121,10 +118,21 @@ export default function HomeScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const mainScrollRef = useRef<ScrollView>(null);
 
+  // Derived from profile — always in sync with ProfileScreen
+  const userName = profile?.first_name ?? null;
+  const userPoints = profile?.points ?? null;
+  const userId = user?.id ?? null;
+  const memberRank =
+    (profile?.points ?? 0) >= 5000
+      ? "Platinum Member"
+      : (profile?.points ?? 0) >= 1000
+        ? "Gold Member"
+        : "Silver Member";
+
   useFocusEffect(
     useCallback(() => {
       mainScrollRef.current?.scrollTo({ y: 0, animated: false });
-      fetchUser();
+      refreshProfile(); // re-fetch profile every time tab is focused
       fetchWeather();
     }, []),
   );
@@ -140,22 +148,6 @@ export default function HomeScreen() {
       setWeather({ temp: `${Math.round(temperature)}°C`, ...info });
     } catch {
       setWeather({ temp: "--°C", label: "N/A", iconName: "thermometer" });
-    }
-  }
-
-  async function fetchUser() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      const firstName = user.user_metadata?.first_name;
-      setUserName(firstName || user.email?.split("@")[0] || null);
-      setUserPoints(120);
-      setUserId(user.id);
-    } else {
-      setUserName(null);
-      setUserPoints(null);
-      setUserId(null);
     }
   }
 
@@ -176,7 +168,7 @@ export default function HomeScreen() {
       ref={mainScrollRef}
       style={{ flex: 1, backgroundColor: C.white }}
     >
-      {/* ── HEADER: Logo only ── */}
+      {/* ── HEADER ── */}
       <View
         style={{
           backgroundColor: C.green,
@@ -196,7 +188,7 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* ── HERO VIDEO — clean, no overlay ── */}
+      {/* ── HERO VIDEO ── */}
       <View style={{ position: "relative" }}>
         <Video
           source={require("../assets/videos/HOTEL-AVP.mp4")}
@@ -206,7 +198,6 @@ export default function HomeScreen() {
           isLooping
           isMuted
         />
-        {/* Book Now floating below video */}
         <View
           style={{ position: "absolute", bottom: -22, alignSelf: "center" }}
         >
@@ -253,7 +244,6 @@ export default function HomeScreen() {
             elevation: 3,
           }}
         >
-          {/* Top row: left info + right weather */}
           <View
             style={{
               flexDirection: "row",
@@ -261,7 +251,6 @@ export default function HomeScreen() {
               alignItems: "flex-start",
             }}
           >
-            {/* Left: label + greeting + name + points */}
             <View style={{ flex: 1, marginRight: 12 }}>
               <Text
                 style={{
@@ -278,7 +267,6 @@ export default function HomeScreen() {
               <Text style={{ fontSize: 14, color: "#475569" }}>
                 {getGreeting()}
               </Text>
-              {/* Name + icon */}
               <View
                 style={{
                   flexDirection: "row",
@@ -294,7 +282,6 @@ export default function HomeScreen() {
                 </Text>
                 <Ionicons name="sparkles" size={20} color={C.gold} />
               </View>
-              {/* Points */}
               <Text style={{ fontSize: 13, color: "#64748B", marginTop: 4 }}>
                 {userPoints !== null
                   ? `${userPoints} VS Points`
@@ -302,7 +289,7 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            {/* Right: Weather */}
+            {/* Weather */}
             <View
               style={{
                 alignItems: "center",
@@ -341,7 +328,7 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Member rank pill — full width */}
+          {/* Member rank pill */}
           {userName ? (
             <View
               style={{
@@ -384,12 +371,13 @@ export default function HomeScreen() {
       </View>
 
       {/* ── MEMBER CARD ── */}
-      {userName && (
+      {userName && userId && (
         <MemberCard
-          userId={userId ?? ""}
+          userId={userId}
           userName={userName}
           memberRank={memberRank}
           points={userPoints ?? 0}
+          lastCheckIn={lastCheckIn}
         />
       )}
 
@@ -787,7 +775,7 @@ export default function HomeScreen() {
                 {review.name}
               </Text>
               <Text style={{ color: "#64748B", fontSize: 12 }}>
-                Reviewed {review.date}
+                {"Reviewed " + review.date}
               </Text>
             </View>
           ))}

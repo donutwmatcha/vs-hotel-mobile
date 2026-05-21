@@ -1,8 +1,10 @@
+// src/screens/VSScreen.tsx
 import {
   FontAwesome5,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -21,7 +23,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -68,6 +69,7 @@ type RetailCategory = {
   tags: string[];
   description: string;
   bg: string;
+  image: any; // ← background photo for the card
   icon: React.ReactNode;
   partners: Partner[];
 };
@@ -143,6 +145,7 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     tags: ["Restaurant", "Café", "Bar"],
     description: "Curated restaurants, cafés, and bars inside VS Tower.",
     bg: "#1C1008",
+    image: require("../assets/categories/dining-and-food.jpg"),
     icon: <FontAwesome5 name="utensils" size={18} color="#D4A017" />,
     partners: [
       {
@@ -202,6 +205,7 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     tags: ["Conbini", "Lifestyle", "Gifts"],
     description: "Premium shops and lifestyle brands right at your doorstep.",
     bg: "#0E1218",
+    image: require("../assets/categories/shopping.jpg"),
     icon: <FontAwesome5 name="shopping-bag" size={18} color="#D4A017" />,
     partners: [
       {
@@ -246,6 +250,7 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     description:
       "Trusted health clinics and wellness centers to keep you at your best.",
     bg: "#0E1C12",
+    image: require("../assets/categories/health-and-wellness.jpg"),
     icon: <FontAwesome5 name="heartbeat" size={18} color="#D4A017" />,
     partners: [
       {
@@ -284,6 +289,7 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     description:
       "Professional office spaces and business centers within VS Tower.",
     bg: "#12181C",
+    image: require("../assets/categories/offices.jpg"),
     icon: (
       <MaterialCommunityIcons
         name="office-building-outline"
@@ -393,6 +399,7 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     description:
       "Structured sports programs and coaching for all ages and skill levels.",
     bg: "#101820",
+    image: require("../assets/categories/sports-programs.jpg"),
     icon: <FontAwesome5 name="running" size={18} color="#D4A017" />,
     partners: [
       {
@@ -479,6 +486,7 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     description:
       "Everyday services you need, all conveniently located within VS Tower.",
     bg: "#1A1010",
+    image: require("../assets/categories/services.jpg"),
     icon: <FontAwesome5 name="concierge-bell" size={18} color="#D4A017" />,
     partners: [
       {
@@ -564,103 +572,39 @@ const JOBS: Job[] = [
     type: "Fulltime",
     shift: "8hr shift",
     duties: [
-      "Take food and drink orders from customers accurately and with a positive attitude.",
-      "Write patrons food orders on order slips, memorize orders, or enter orders into computers.",
-      "Engage with customers in a friendly manner.",
-      "Knowledge of the menu, with the ability to make suggestions.",
-      "Ensure tables are enjoying their meals and take action to correct any problems.",
-      "Collect payments from tables.",
-      "Prepare checks that itemize and total meal costs and sales taxes.",
-      "Help food preparation staff when necessary.",
+      "Welcome and greet guests in a warm and friendly manner.",
+      "Present, promote and sell menu items.",
+      "Take accurate food and drinks orders.",
+      "Communicate order details to the kitchen staff.",
+      "Serve food and drink orders.",
+      "Check dishes and kitchenware for cleanliness and presentation.",
+      "Arrange table settings and maintain a tidy dining area.",
+      "Deliver checks and collect bill payments.",
     ],
   },
   {
-    id: "massage-therapist-commission",
-    title: "Massage Therapist (Commission-Based)",
-    type: "Fulltime",
-    shift: "Day shift",
-    duties: [
-      "Perform various types of massage therapy, including Swedish, deep tissue, sports, and hot stone massages.",
-      "Conduct initial consultations to understand client needs and medical history.",
-      "Customize massage treatments to address specific client issues and preferences.",
-      "Maintain a clean, safe, and comfortable environment for clients.",
-      "Use appropriate techniques and equipment to ensure effective and safe treatments.",
-      "Provide clients with information on post-massage care and recommendations for ongoing wellness.",
-      "Build and maintain strong relationships with clients to encourage repeat business.",
-      "Stay updated on the latest massage therapy techniques and industry trends.",
-      "Maintain all necessary certifications and licenses.",
-    ],
-  },
-  {
-    id: "cashier",
-    title: "Cashier",
-    type: "Fulltime",
-    shift: "Day shift",
-    duties: [
-      "Process Customer Orders: Accurately take and input orders into the system.",
-      "Handle Cash and Card Transactions: Process payments through cash, credit cards, or other payment methods.",
-      "Issue Receipts and Change: Ensure that customers receive correct change and receipts.",
-      "Maintain Cash Register Balance: Reconcile the register's total cash at the end of each shift.",
-      "Provide Excellent Customer Service: Greet and assist customers, answering questions about the menu.",
-      "Handle Customer Complaints: Address customer concerns politely and escalate issues as necessary.",
-      "Operate POS System: Use the point-of-sale system efficiently and with accuracy.",
-      "Upsell Items: Suggest add-ons, desserts, or beverages to enhance the customer's order.",
-    ],
-  },
-  {
-    id: "duty-manager",
-    title: "Duty Manager",
-    type: "Fulltime",
-    shift: "Day shift",
-    duties: [
-      "Oversee the day-to-day operations of the bar, ensuring efficient and smooth service delivery.",
-      "Ensure the bar is stocked adequately with beverages, ingredients, and supplies.",
-      "Monitor bar opening and closing procedures and ensure all health and safety protocols are followed.",
-      "Supervise and support bar staff, including bartenders, servers, and support staff.",
-      "Conduct staff briefings before each shift, outlining service standards and special instructions.",
-      "Provide on-the-job training, coaching, and performance feedback to staff.",
-      "Resolve any customer complaints or issues in a professional and timely manner.",
-      "Oversee cash handling procedures, including opening and closing cash registers.",
-      "Handle emergencies, including customer incidents, equipment failures, or security issues.",
-    ],
-  },
-  {
-    id: "line-cook",
-    title: "Line Cook",
+    id: "front-desk",
+    title: "Front Desk Officer",
     type: "Fulltime",
     shift: "8hr shift",
     duties: [
-      "Ensuring the preparation station and the kitchen are set up and stocked.",
-      "Preparing simple components of each dish on the menu by chopping vegetables, cutting meat, and preparing sauces.",
-      "Reporting to the executive chef and following instructions.",
-      "Making sure food preparation and storage areas meet health and safety standards.",
-      "Cleaning prep areas and taking care of leftovers.",
-      "Stocking inventory and supplies.",
-      "Cooking menu items with the support of the kitchen staff.",
+      "Welcome guests and check them in and out of the hotel.",
+      "Answer all client questions and incoming calls.",
+      "Redirect phone calls to the appropriate department.",
+      "Accept all letters and packages, and distribute them to their appropriate departments.",
+      "Monitor, organize and forward emails.",
+      "Track and order office equipment and supplies.",
+      "Maintain records and files.",
     ],
   },
   {
-    id: "reservation-associate",
-    title: "Reservation Associate",
-    type: "Fulltime",
-    shift: "Day shift",
+    id: "pr-intern",
+    title: "PR & Communications Intern",
+    type: "Internship",
+    shift: null,
     duties: [
-      "Process and confirm guest reservations through various channels (phone, email, online booking systems).",
-      "Provide exceptional service to guests by responding to inquiries and addressing concerns.",
-      "Promote special packages, upsell room types, and inform guests of available amenities.",
-      "Collaborate with front desk staff, housekeeping, and other departments for seamless guest experiences.",
-      "Maintain accurate records of reservations, cancellations, and changes in guest itineraries.",
-      "Address and resolve guest issues or complaints in a timely and professional manner.",
-      "Stay informed about local events, attractions, and the competitive landscape.",
-    ],
-  },
-  {
-    id: "pr-coordinator",
-    title: "PR Coordinator",
-    type: "Fulltime",
-    shift: "Day shift",
-    duties: [
-      "Help organize and promote PR events such as press conferences, product launches, and media tours.",
+      "Assist in developing and executing PR campaigns and strategies.",
+      "Draft and distribute press releases, media pitches, and other PR materials.",
       "Handle event logistics, including invitations, venue coordination, and promotional materials.",
       "Assist in managing social media accounts by creating and scheduling posts related to PR campaigns.",
       "Assist in creating content for blogs, newsletters, and company websites.",
@@ -938,8 +882,7 @@ function PartnersBottomSheet({
           </TouchableOpacity>
         </View>
         <Text style={bss.partnerCount}>
-          {category.partners.length} partner
-          {category.partners.length !== 1 ? "s" : ""} in VS Tower
+          {`${category.partners.length} partner${category.partners.length !== 1 ? "s" : ""} in VS Tower`}
         </Text>
         <ScrollView
           style={{ flex: 1 }}
@@ -1102,7 +1045,7 @@ function CarouselCard({
   );
 }
 
-// ─── Editorial Card ───────────────────────────────────────────────────────────
+// ─── Editorial Card — now with real background image + black gradient ─────────
 function EditorialCard({
   item,
   onPress,
@@ -1112,11 +1055,31 @@ function EditorialCard({
 }) {
   return (
     <TouchableOpacity
-      style={[ed.card, { backgroundColor: item.bg }]}
+      style={ed.card}
       onPress={() => onPress(item)}
       activeOpacity={0.88}
     >
-      <View style={ed.overlay} />
+      {/* Background photo */}
+      <Image
+        source={item.image}
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+        }}
+        resizeMode="stretch"
+      />
+
+      {/* Black gradient from transparent (top) → black (bottom) */}
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.92)"]}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      {/* Text content sits on top */}
       <View style={ed.content}>
         <View style={ed.tagsRow}>
           {item.tags.map((t) => (
@@ -1416,7 +1379,7 @@ function CareerBottomSheet({
           </TouchableOpacity>
         </View>
         <Text style={bss.partnerCount}>
-          {JOBS.length} open positions • Marivent Resort Hotel, Inc.
+          {`${JOBS.length} open positions \u2022 Marivent Resort Hotel, Inc.`}
         </Text>
         <ScrollView
           style={{ flex: 1 }}
@@ -1506,7 +1469,7 @@ export default function VSScreen() {
           ))}
         </View>
 
-        {/* Careers — single button */}
+        {/* Careers */}
         <View style={s.editSection}>
           <Text style={s.sectionLabel}>CAREERS</Text>
           <Text style={s.sectionSub}>Join the VS family</Text>
@@ -1536,7 +1499,7 @@ export default function VSScreen() {
           <Text style={ct.line}>events@vshotel.com.ph</Text>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
       <CarouselBottomSheet
@@ -1595,29 +1558,25 @@ const car = StyleSheet.create({
 const ed = StyleSheet.create({
   card: {
     width: "100%",
-    height: 160,
+    aspectRatio: 750 / 400,
     borderRadius: 16,
     overflow: "hidden",
     marginBottom: 12,
     justifyContent: "flex-end",
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
   content: { padding: 16 },
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 6 },
   tag: {
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.35)",
+    borderColor: "rgba(255,255,255,0.45)",
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 3,
   },
-  tagText: { color: "rgba(255,255,255,0.75)", fontSize: 10, fontWeight: "600" },
-  title: { color: C.white, fontSize: 18, fontWeight: "800", marginBottom: 3 },
+  tagText: { color: "rgba(255,255,255,0.85)", fontSize: 10, fontWeight: "600" },
+  title: { color: C.white, fontSize: 20, fontWeight: "800", marginBottom: 3 },
   desc: {
-    color: "rgba(255,255,255,0.6)",
+    color: "rgba(255,255,255,0.7)",
     fontSize: 11,
     lineHeight: 16,
     marginBottom: 8,
@@ -1834,54 +1793,44 @@ const rf = StyleSheet.create({
   input: {
     backgroundColor: C.offWhite,
     borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    paddingHorizontal: 12,
-    paddingVertical: 11,
+    padding: 12,
     fontSize: 14,
     color: C.dark,
+    borderWidth: 1,
+    borderColor: C.grayLight,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: C.offWhite,
     borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
+    borderWidth: 1,
+    borderColor: C.grayLight,
   },
   inputIcon: { paddingLeft: 12 },
-  inputWithIcon: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 11,
-    fontSize: 14,
-    color: C.dark,
-  },
+  inputWithIcon: { flex: 1, padding: 12, fontSize: 14, color: C.dark },
   picker: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: C.offWhite,
     borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    paddingHorizontal: 12,
-    paddingVertical: 11,
+    borderWidth: 1,
+    borderColor: C.grayLight,
+    padding: 12,
   },
   pickerText: { flex: 1, fontSize: 14, color: C.dark, marginLeft: 8 },
   dropdownContainer: {
     backgroundColor: C.white,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: C.grayLight,
     marginTop: 4,
     overflow: "hidden",
-    elevation: 4,
   },
   dropdownItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 11,
     flexDirection: "row",
     alignItems: "center",
+    padding: 12,
     justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
@@ -1909,7 +1858,7 @@ const ct = StyleSheet.create({
   },
   heading: {
     color: C.white,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "800",
     marginBottom: 16,
   },
@@ -1937,15 +1886,8 @@ const s = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 20,
   },
-  eyebrow: {
-    fontSize: 11,
-    color: "#D4A017",
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    fontWeight: "700",
-  },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 24, // ← bumped up from 22
     fontWeight: "900",
     color: C.white,
     marginTop: 2,
@@ -1960,11 +1902,12 @@ const s = StyleSheet.create({
   },
   vsCircleText: { color: C.white, fontWeight: "900", fontSize: 16 },
   carouselWrap: { paddingTop: 24, paddingBottom: 8 },
+  // ─ Section labels — bigger ─
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: "800",
+    fontSize: 20, // ← was 11 (tracking label style), now big heading
+    fontWeight: "900",
     color: C.green,
-    letterSpacing: 2,
+    letterSpacing: 0.5,
     paddingHorizontal: 20,
     marginBottom: 4,
   },
