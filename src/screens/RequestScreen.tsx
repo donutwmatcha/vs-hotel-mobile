@@ -492,7 +492,7 @@ export default function RequestScreen() {
             </>
           )}
 
-          <View style={{ height: 120 }} />
+          <View style={{ height: 20 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -501,7 +501,7 @@ export default function RequestScreen() {
 
 const styles = StyleSheet.create({
   // SafeAreaView bg matches offWhite so no green bleed at bottom
-  safe: { flex: 1, backgroundColor: C.offWhite },
+  safe: { flex: 1, backgroundColor: C.green },
 
   // Single green block for header + tabs — no gap, no bar
   headerBlock: {

@@ -1499,7 +1499,7 @@ export default function VSScreen() {
           <Text style={ct.line}>events@vshotel.com.ph</Text>
         </View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 20 }} />
       </ScrollView>
 
       <CarouselBottomSheet

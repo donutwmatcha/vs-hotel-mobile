@@ -1,7 +1,8 @@
 // src/screens/HomeScreen.tsx
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Dimensions,
@@ -19,7 +20,6 @@ import MembershipBanner from "../components/MembershipBanner";
 import RoomsSection from "../components/RoomsSection";
 import { useAuth } from "../context/AuthContext";
 
-// ─── Brand colors ─────────────────────────────────────────────────────────────
 const C = {
   green: "#14532D",
   gold: "#C89B3C",
@@ -85,29 +85,10 @@ const EVENTS = [
   },
 ];
 
-const DEALS = [
-  {
-    iconName: "bolt",
-    label: "Flash Sale",
-    title: "20% Off All Rooms",
-    subtitle: "This weekend only • Ends May 18",
-  },
-  {
-    iconName: "moon",
-    label: "Night Owl Deal",
-    title: "Book After 9PM, Save 15%",
-    subtitle: "App exclusive • Limited slots",
-  },
-  {
-    iconName: "gift",
-    label: "Anniversary Promo",
-    title: "Stay 2 Nights, Get 1 Free",
-    subtitle: "Valid May 20–31 only",
-  },
-];
-
 export default function HomeScreen() {
-  const { user, profile, lastCheckIn, refreshProfile } = useAuth();
+  const navigation = useNavigation<any>();
+  const { user, profile, lastCheckIn, lastCheckOut, refreshProfile } =
+    useAuth();
   const [currentPromo, setCurrentPromo] = useState(0);
   const [weather, setWeather] = useState<{
     temp: string;
@@ -118,7 +99,6 @@ export default function HomeScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const mainScrollRef = useRef<ScrollView>(null);
 
-  // Derived from profile — always in sync with ProfileScreen
   const userName = profile?.first_name ?? null;
   const userPoints = profile?.points ?? null;
   const userId = user?.id ?? null;
@@ -132,7 +112,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       mainScrollRef.current?.scrollTo({ y: 0, animated: false });
-      refreshProfile(); // re-fetch profile every time tab is focused
+      refreshProfile();
       fetchWeather();
     }, []),
   );
@@ -349,7 +329,7 @@ export default function HomeScreen() {
             </View>
           ) : (
             <TouchableOpacity
-              onPress={() => router.push("/signin")}
+              onPress={() => navigation.navigate("SignIn")}
               style={{
                 backgroundColor: C.green,
                 borderRadius: 30,
@@ -378,6 +358,7 @@ export default function HomeScreen() {
           memberRank={memberRank}
           points={userPoints ?? 0}
           lastCheckIn={lastCheckIn}
+          lastCheckOut={lastCheckOut}
         />
       )}
 
@@ -789,7 +770,7 @@ export default function HomeScreen() {
         memberRank={memberRank}
       />
 
-      <View style={{ height: 100 }} />
+      <View style={{ height: 90 }} />
     </ScrollView>
   );
 }

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   Text,
@@ -13,6 +14,223 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
+const YEARS = Array.from(
+  { length: 100 },
+  (_, i) => new Date().getFullYear() - i,
+);
+
+function DatePickerModal({
+  visible,
+  onClose,
+  onConfirm,
+  month,
+  day,
+  year,
+  setMonth,
+  setDay,
+  setYear,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  month: number;
+  day: number;
+  year: number;
+  setMonth: (v: number) => void;
+  setDay: (v: number) => void;
+  setYear: (v: number) => void;
+}) {
+  return (
+    <Modal
+      transparent
+      visible={visible}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          justifyContent: "flex-end",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: "#fff",
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            padding: 24,
+            paddingBottom: 40,
+          }}
+        >
+          <View
+            style={{
+              width: 40,
+              height: 4,
+              backgroundColor: "#DDD",
+              borderRadius: 2,
+              alignSelf: "center",
+              marginBottom: 20,
+            }}
+          />
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "900",
+              color: "#0F172A",
+              marginBottom: 20,
+            }}
+          >
+            Select Birthday
+          </Text>
+
+          {/* Month */}
+          <Text style={labelStyle}>MONTH</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: 16 }}
+          >
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {MONTHS.map((m, i) => (
+                <TouchableOpacity
+                  key={m}
+                  onPress={() => setMonth(i + 1)}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: month === i + 1 ? "#14532D" : "#F1F5F9",
+                    borderWidth: 1,
+                    borderColor: month === i + 1 ? "#14532D" : "#E2E8F0",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: month === i + 1 ? "#fff" : "#64748B",
+                      fontWeight: "600",
+                      fontSize: 13,
+                    }}
+                  >
+                    {m}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          {/* Day */}
+          <Text style={labelStyle}>DAY</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: 16 }}
+          >
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {DAYS.map((d) => (
+                <TouchableOpacity
+                  key={d}
+                  onPress={() => setDay(d)}
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 21,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: day === d ? "#14532D" : "#F1F5F9",
+                    borderWidth: 1,
+                    borderColor: day === d ? "#14532D" : "#E2E8F0",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: day === d ? "#fff" : "#64748B",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {d}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          {/* Year */}
+          <Text style={labelStyle}>YEAR</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: 24 }}
+          >
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {YEARS.map((y) => (
+                <TouchableOpacity
+                  key={y}
+                  onPress={() => setYear(y)}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: year === y ? "#14532D" : "#F1F5F9",
+                    borderWidth: 1,
+                    borderColor: year === y ? "#14532D" : "#E2E8F0",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: year === y ? "#fff" : "#64748B",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {y}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          <TouchableOpacity
+            onPress={onConfirm}
+            style={{
+              backgroundColor: "#14532D",
+              borderRadius: 30,
+              paddingVertical: 14,
+              alignItems: "center",
+              marginBottom: 10,
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>
+              Confirm Birthday
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onClose}
+            style={{ paddingVertical: 10, alignItems: "center" }}
+          >
+            <Text style={{ color: "#64748B", fontSize: 14 }}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
 
 export default function SignUpScreen() {
   const [firstName, setFirstName] = useState("");
@@ -25,6 +243,20 @@ export default function SignUpScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Birthdate
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [birthMonth, setBirthMonth] = useState(1);
+  const [birthDay, setBirthDay] = useState(1);
+  const [birthYear, setBirthYear] = useState(2000);
+  const [birthdateConfirmed, setBirthdateConfirmed] = useState(false);
+
+  const birthdateDisplay = birthdateConfirmed
+    ? `${MONTHS[birthMonth - 1]} ${birthDay}, ${birthYear}`
+    : null;
+
+  // Format as YYYY-MM-DD for Supabase
+  const birthdateForDB = `${birthYear}-${String(birthMonth).padStart(2, "0")}-${String(birthDay).padStart(2, "0")}`;
+
   async function handleSignUp() {
     if (
       !firstName ||
@@ -35,6 +267,10 @@ export default function SignUpScreen() {
       !confirmPassword
     ) {
       Alert.alert("Please fill in all fields.");
+      return;
+    }
+    if (!birthdateConfirmed) {
+      Alert.alert("Please select your birthday.");
       return;
     }
     if (password !== confirmPassword) {
@@ -56,6 +292,7 @@ export default function SignUpScreen() {
             first_name: firstName,
             last_name: lastName,
             phone,
+            birthdate: birthdateForDB,
           },
         },
       });
@@ -63,6 +300,12 @@ export default function SignUpScreen() {
       if (error) throw error;
 
       if (data.user) {
+        // Also update profiles table with birthdate
+        await supabase
+          .from("profiles")
+          .update({ birthdate: birthdateForDB })
+          .eq("id", data.user.id);
+
         Alert.alert(
           "Welcome to VS Hotel! 🎉",
           "Your account has been created.",
@@ -159,6 +402,7 @@ export default function SignUpScreen() {
           </View>
 
           <View style={{ paddingHorizontal: 20, gap: 16 }}>
+            {/* Name row */}
             <View style={{ flexDirection: "row", gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <Text style={labelStyle}>FIRST NAME</Text>
@@ -182,6 +426,7 @@ export default function SignUpScreen() {
               </View>
             </View>
 
+            {/* Email */}
             <View>
               <Text style={labelStyle}>EMAIL ADDRESS</Text>
               <TextInput
@@ -195,6 +440,7 @@ export default function SignUpScreen() {
               />
             </View>
 
+            {/* Phone */}
             <View>
               <Text style={labelStyle}>PHONE NUMBER</Text>
               <TextInput
@@ -207,6 +453,35 @@ export default function SignUpScreen() {
               />
             </View>
 
+            {/* Birthday */}
+            <View>
+              <Text style={labelStyle}>BIRTHDAY</Text>
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                style={[
+                  inputStyle,
+                  { flexDirection: "row", alignItems: "center", gap: 10 },
+                ]}
+              >
+                <FontAwesome5
+                  name="birthday-cake"
+                  size={16}
+                  color={birthdateConfirmed ? "#14532D" : "#94A3B8"}
+                />
+                <Text
+                  style={{
+                    flex: 1,
+                    color: birthdateConfirmed ? "#0F172A" : "#94A3B8",
+                    fontSize: 15,
+                  }}
+                >
+                  {birthdateDisplay ?? "Select your birthday"}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Password */}
             <View>
               <Text style={labelStyle}>PASSWORD</Text>
               <View style={{ position: "relative" }}>
@@ -229,6 +504,7 @@ export default function SignUpScreen() {
               </View>
             </View>
 
+            {/* Confirm Password */}
             <View>
               <Text style={labelStyle}>CONFIRM PASSWORD</Text>
               <View style={{ position: "relative" }}>
@@ -287,6 +563,21 @@ export default function SignUpScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <DatePickerModal
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        onConfirm={() => {
+          setBirthdateConfirmed(true);
+          setShowDatePicker(false);
+        }}
+        month={birthMonth}
+        day={birthDay}
+        year={birthYear}
+        setMonth={setBirthMonth}
+        setDay={setBirthDay}
+        setYear={setBirthYear}
+      />
     </SafeAreaView>
   );
 }

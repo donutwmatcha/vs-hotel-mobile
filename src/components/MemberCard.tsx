@@ -6,16 +6,13 @@ import QRCode from "react-native-qrcode-svg";
 
 const C = {
   green: "#14532D",
-  greenLight: "#1a6b3c",
   gold: "#C89B3C",
   goldLight: "#D4A017",
   white: "#FFFFFF",
-  offWhite: "#F8FAFC",
   gray: "#64748B",
-  grayLight: "#E5E7EB",
 };
 
-interface CheckIn {
+interface CheckInRecord {
   id: string;
   checked_in_at: string;
   points_awarded: number;
@@ -27,7 +24,23 @@ interface Props {
   userName: string;
   memberRank: string;
   points: number;
-  lastCheckIn?: CheckIn | null;
+  lastCheckIn?: CheckInRecord | null;
+  lastCheckOut?: CheckInRecord | null;
+}
+
+function fmt(iso: string, type: "time" | "date") {
+  const d = new Date(iso);
+  if (type === "time")
+    return d.toLocaleTimeString("en-PH", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  return d.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export default function MemberCard({
@@ -36,30 +49,14 @@ export default function MemberCard({
   memberRank,
   points,
   lastCheckIn,
+  lastCheckOut,
 }: Props) {
   const qrData = JSON.stringify({
     id: userId,
     name: userName,
     rank: memberRank,
   });
-
   const shortId = userId.slice(0, 8).toUpperCase();
-
-  const checkInTime = lastCheckIn
-    ? new Date(lastCheckIn.checked_in_at).toLocaleTimeString("en-PH", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
-    : null;
-
-  const checkInDate = lastCheckIn
-    ? new Date(lastCheckIn.checked_in_at).toLocaleDateString("en-PH", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
 
   return (
     <View style={s.card}>
@@ -75,17 +72,16 @@ export default function MemberCard({
         </View>
       </View>
 
-      {/* Check-in status banner */}
+      {/* Check-in banner */}
       {lastCheckIn ? (
         <View style={s.checkedInBanner}>
-          <View style={s.checkedInDot} />
+          <View style={s.greenDot} />
           <View style={{ flex: 1 }}>
-            <Text style={s.checkedInLabel}>
-              {lastCheckIn.action ?? "Check-In"} Today
-            </Text>
+            <Text style={s.checkedInLabel}>Checked In Today</Text>
             <Text style={s.checkedInTime}>
-              {checkInDate} {"•"} {checkInTime} {"•"} +
-              {lastCheckIn.points_awarded} pts
+              {fmt(lastCheckIn.checked_in_at, "date")} {"\u2022"}{" "}
+              {fmt(lastCheckIn.checked_in_at, "time")} {"\u2022"} +
+              {lastCheckIn.points_awarded} VS Points
             </Text>
           </View>
           <Ionicons name="checkmark-circle" size={20} color="#86EFAC" />
@@ -98,6 +94,21 @@ export default function MemberCard({
             color="rgba(255,255,255,0.4)"
           />
           <Text style={s.notCheckedInText}>Not yet checked in today</Text>
+        </View>
+      )}
+
+      {/* Check-out banner */}
+      {lastCheckOut && (
+        <View style={s.checkedOutBanner}>
+          <View style={s.redDot} />
+          <View style={{ flex: 1 }}>
+            <Text style={s.checkedOutLabel}>Checked Out Today</Text>
+            <Text style={s.checkedOutTime}>
+              {fmt(lastCheckOut.checked_in_at, "date")} {"\u2022"}{" "}
+              {fmt(lastCheckOut.checked_in_at, "time")}
+            </Text>
+          </View>
+          <Ionicons name="checkmark-circle" size={20} color="#FCA5A5" />
         </View>
       )}
 
@@ -166,12 +177,7 @@ const s = StyleSheet.create({
     color: C.goldLight,
     letterSpacing: 2,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: C.white,
-    marginTop: 2,
-  },
+  cardTitle: { fontSize: 18, fontWeight: "900", color: C.white, marginTop: 2 },
   rankBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -183,11 +189,8 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(200,155,60,0.4)",
   },
-  rankText: {
-    color: C.gold,
-    fontSize: 12,
-    fontWeight: "800",
-  },
+  rankText: { color: C.gold, fontSize: 12, fontWeight: "800" },
+
   checkedInBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -201,22 +204,15 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 10,
   },
-  checkedInDot: {
+  greenDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: "#86EFAC",
   },
-  checkedInLabel: {
-    color: "#86EFAC",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  checkedInTime: {
-    color: "rgba(134,239,172,0.7)",
-    fontSize: 11,
-    marginTop: 1,
-  },
+  checkedInLabel: { color: "#86EFAC", fontSize: 12, fontWeight: "700" },
+  checkedInTime: { color: "rgba(134,239,172,0.7)", fontSize: 11, marginTop: 1 },
+
   notCheckedInBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -230,6 +226,28 @@ const s = StyleSheet.create({
     fontSize: 11,
     fontStyle: "italic",
   },
+
+  checkedOutBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "rgba(220,38,38,0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(252,165,165,0.3)",
+    marginHorizontal: 16,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  redDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#FCA5A5" },
+  checkedOutLabel: { color: "#FCA5A5", fontSize: 12, fontWeight: "700" },
+  checkedOutTime: {
+    color: "rgba(252,165,165,0.7)",
+    fontSize: 11,
+    marginTop: 1,
+  },
+
   divider: {
     height: 1,
     backgroundColor: "rgba(255,255,255,0.15)",
@@ -251,11 +269,7 @@ const s = StyleSheet.create({
     letterSpacing: 1.5,
     marginBottom: 3,
   },
-  memberName: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: C.white,
-  },
+  memberName: { fontSize: 17, fontWeight: "800", color: C.white },
   memberId: {
     fontSize: 13,
     fontWeight: "600",
@@ -274,11 +288,7 @@ const s = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 20,
   },
-  pointsText: {
-    color: C.gold,
-    fontSize: 12,
-    fontWeight: "700",
-  },
+  pointsText: { color: C.gold, fontSize: 12, fontWeight: "700" },
   qrWrap: {
     alignItems: "center",
     gap: 6,

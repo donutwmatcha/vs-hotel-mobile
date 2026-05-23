@@ -15,9 +15,11 @@ interface Profile {
   avatar_id: number | null;
   avatar_url: string | null;
   email_subscribed: boolean;
+  birthdate: string | null;
+  birthday_bonus_year: number | null;
 }
 
-interface CheckIn {
+interface CheckInRecord {
   id: string;
   checked_in_at: string;
   points_awarded: number;
@@ -27,7 +29,8 @@ interface CheckIn {
 interface AuthContextType {
   user: any | null;
   profile: Profile | null;
-  lastCheckIn: CheckIn | null;
+  lastCheckIn: CheckInRecord | null;
+  lastCheckOut: CheckInRecord | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -37,6 +40,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   lastCheckIn: null,
+  lastCheckOut: null,
   loading: true,
   signOut: async () => {},
   refreshProfile: async () => {},
@@ -45,7 +49,8 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [lastCheckIn, setLastCheckIn] = useState<CheckIn | null>(null);
+  const [lastCheckIn, setLastCheckIn] = useState<CheckInRecord | null>(null);
+  const [lastCheckOut, setLastCheckOut] = useState<CheckInRecord | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function fetchProfile(userId: string) {
@@ -56,17 +61,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .single();
     if (!error && data) setProfile(data);
 
-    // Fetch today's latest check-in
     const today = new Date().toISOString().split("T")[0];
+
+    // Fetch today's latest check-in
     const { data: ci } = await supabase
       .from("check_ins")
       .select("*")
       .eq("guest_id", userId)
+      .eq("action", "Check-In")
       .gte("checked_in_at", today + "T00:00:00")
       .order("checked_in_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     setLastCheckIn(ci ?? null);
+
+    // Fetch today's latest check-out
+    const { data: co } = await supabase
+      .from("check_ins")
+      .select("*")
+      .eq("guest_id", userId)
+      .eq("action", "Check-Out")
+      .gte("checked_in_at", today + "T00:00:00")
+      .order("checked_in_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setLastCheckOut(co ?? null);
   }
 
   async function refreshProfile() {
@@ -89,11 +108,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
         setLastCheckIn(null);
+        setLastCheckOut(null);
       }
       setLoading(false);
     });
 
-    // Auto-refresh when app comes back to foreground
     const handleAppState = (nextState: AppStateStatus) => {
       if (nextState === "active") {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -114,11 +133,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setProfile(null);
     setLastCheckIn(null);
+    setLastCheckOut(null);
   }
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, lastCheckIn, loading, signOut, refreshProfile }}
+      value={{
+        user,
+        profile,
+        lastCheckIn,
+        lastCheckOut,
+        loading,
+        signOut,
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

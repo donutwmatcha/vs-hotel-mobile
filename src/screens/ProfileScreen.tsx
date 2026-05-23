@@ -6,10 +6,12 @@ import {
 } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Dimensions,
   Image,
   Linking,
   Modal,
@@ -24,7 +26,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
-// ─── Brand colors ─────────────────────────────────────────────────────────────
+const { width: SW, height: SH } = Dimensions.get("window");
+
 const C = {
   green: "#14532D",
   gold: "#C89B3C",
@@ -35,7 +38,21 @@ const C = {
   dark: "#0F172A",
 };
 
-// ─── Preset Avatars ───────────────────────────────────────────────────────────
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 const PRESET_AVATARS = [
   { id: 1, source: require("../assets/avatars/avatar1.jpg") },
   { id: 2, source: require("../assets/avatars/avatar2.jpg") },
@@ -47,7 +64,6 @@ const PRESET_AVATARS = [
   { id: 8, source: require("../assets/avatars/avatar8.jpg") },
 ];
 
-// ─── Tier / Rewards / Earn data ───────────────────────────────────────────────
 const TIERS = [
   {
     name: "Silver",
@@ -170,8 +186,133 @@ const EARN_ITEMS = [
     icon: <FontAwesome5 name="birthday-cake" size={20} color="#14532D" />,
     action: "Birthday Bonus",
     points: "+200 pts",
+    isBirthday: true,
   },
 ];
+
+// ─── Confetti ─────────────────────────────────────────────────────────────────
+const CONFETTI_COLORS = [
+  "#C89B3C",
+  "#14532D",
+  "#86EFAC",
+  "#FCA5A5",
+  "#93C5FD",
+  "#FDE68A",
+  "#F9A8D4",
+];
+const EMOJIS = ["🎂", "🎉", "🎈", "🎊", "✨", "🌟", "💛"];
+
+function ConfettiPiece({ delay }: { delay: number }) {
+  const y = useRef(new Animated.Value(-20)).current;
+  const rot = useRef(new Animated.Value(0)).current;
+  const xPos = useRef(Math.random() * SW).current;
+  const color =
+    CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+  const size = 8 + Math.random() * 8;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.parallel([
+        Animated.timing(y, {
+          toValue: SH + 20,
+          duration: 2500 + Math.random() * 2000,
+          delay,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rot, {
+          toValue: 360,
+          duration: 1500,
+          delay,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: size,
+        height: size,
+        borderRadius: 2,
+        backgroundColor: color,
+        transform: [
+          { translateX: xPos },
+          { translateY: y },
+          {
+            rotate: rot.interpolate({
+              inputRange: [0, 360],
+              outputRange: ["0deg", "360deg"],
+            }),
+          },
+        ],
+      }}
+    />
+  );
+}
+
+function BalloonEmoji({ emoji, delay }: { emoji: string; delay: number }) {
+  const y = useRef(new Animated.Value(SH)).current;
+  const xPos = useRef(Math.random() * (SW - 40)).current;
+
+  useEffect(() => {
+    Animated.timing(y, {
+      toValue: -100,
+      duration: 4000 + Math.random() * 2000,
+      delay,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  return (
+    <Animated.Text
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        fontSize: 32,
+        transform: [{ translateX: xPos }, { translateY: y }],
+      }}
+    >
+      {emoji}
+    </Animated.Text>
+  );
+}
+
+function BirthdayOverlay({ name }: { name: string }) {
+  const [visible, setVisible] = useState(true);
+  const confettiPieces = Array.from({ length: 30 });
+  const balloons = Array.from({ length: 8 });
+
+  if (!visible) return null;
+
+  return (
+    <View
+      style={{
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "box-none",
+        zIndex: 999,
+      }}
+    >
+      {confettiPieces.map((_, i) => (
+        <ConfettiPiece key={i} delay={i * 80} />
+      ))}
+      {balloons.map((_, i) => (
+        <BalloonEmoji
+          key={i}
+          emoji={EMOJIS[i % EMOJIS.length]}
+          delay={i * 300}
+        />
+      ))}
+    </View>
+  );
+}
 
 // ─── Avatar Picker Modal ──────────────────────────────────────────────────────
 function AvatarPickerModal({
@@ -190,7 +331,6 @@ function AvatarPickerModal({
   saving: boolean;
 }) {
   const [selected, setSelected] = useState<number | null>(currentAvatarId);
-
   useEffect(() => {
     if (visible) setSelected(currentAvatarId);
   }, [visible, currentAvatarId]);
@@ -372,7 +512,6 @@ function AvatarPickerModal({
               </Text>
             )}
           </TouchableOpacity>
-
           <TouchableOpacity
             onPress={onClose}
             style={{ paddingVertical: 10, alignItems: "center" }}
@@ -409,6 +548,16 @@ function PersonalInfoModal({
       setPhone(profile?.phone ?? "");
     }
   }, [visible, profile]);
+
+  // Format birthday display (no year)
+  const birthdayDisplay = profile?.birthdate
+    ? (() => {
+        const parts = profile.birthdate.split("-");
+        const m = parseInt(parts[1]) - 1;
+        const d = parseInt(parts[2]);
+        return `${MONTHS[m]} ${d}`;
+      })()
+    : null;
 
   async function handleSave() {
     if (!firstName.trim() || !lastName.trim()) {
@@ -539,6 +688,28 @@ function PersonalInfoModal({
             placeholderTextColor={C.gray}
           />
 
+          {birthdayDisplay && (
+            <>
+              <Text style={[labelStyle, { marginTop: 14 }]}>BIRTHDAY</Text>
+              <View
+                style={[
+                  inputStyle,
+                  {
+                    backgroundColor: "#F1F5F9",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                  },
+                ]}
+              >
+                <FontAwesome5 name="birthday-cake" size={14} color={C.green} />
+                <Text style={{ color: C.dark, fontSize: 15 }}>
+                  {birthdayDisplay}
+                </Text>
+              </View>
+            </>
+          )}
+
           <TouchableOpacity
             onPress={handleSave}
             disabled={loading}
@@ -555,7 +726,6 @@ function PersonalInfoModal({
               {loading ? "Saving..." : "Save Changes"}
             </Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             onPress={onClose}
             style={{ paddingVertical: 10, alignItems: "center" }}
@@ -581,7 +751,6 @@ function AvatarDisplay({
   onPress?: () => void;
 }) {
   const preset = PRESET_AVATARS.find((a) => a.id === avatarId);
-
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -668,6 +837,25 @@ export default function ProfileScreen() {
     profile?.email_subscribed ?? false,
   );
   const [savingEmail, setSavingEmail] = useState(false);
+  const [birthdayBonusAwarded, setBirthdayBonusAwarded] = useState(false);
+
+  // Check if today is the user's birthday
+  const isBirthday = (() => {
+    if (!profile?.birthdate) return false;
+    const today = new Date();
+    const parts = profile.birthdate.split("-");
+    return (
+      parseInt(parts[1]) === today.getMonth() + 1 &&
+      parseInt(parts[2]) === today.getDate()
+    );
+  })();
+
+  const birthdayDisplay = profile?.birthdate
+    ? (() => {
+        const parts = profile.birthdate.split("-");
+        return `${MONTHS[parseInt(parts[1]) - 1]} ${parseInt(parts[2])}`;
+      })()
+    : null;
 
   const currentTier =
     TIERS.find(
@@ -689,6 +877,38 @@ export default function ProfileScreen() {
       setEmailSubscribed(profile.email_subscribed ?? false);
     }
   }, [profile]);
+
+  // Award birthday bonus once per year
+  useEffect(() => {
+    if (isBirthday && profile && !birthdayBonusAwarded) {
+      const currentYear = new Date().getFullYear();
+      if (profile.birthday_bonus_year !== currentYear) {
+        awardBirthdayBonus();
+      }
+    }
+  }, [isBirthday, profile]);
+
+  async function awardBirthdayBonus() {
+    if (!user || !profile) return;
+    const currentYear = new Date().getFullYear();
+    try {
+      await supabase
+        .from("profiles")
+        .update({
+          points: (profile.points ?? 0) + 200,
+          birthday_bonus_year: currentYear,
+        })
+        .eq("id", user.id);
+      setBirthdayBonusAwarded(true);
+      await refreshProfile();
+      Alert.alert(
+        "🎂 Happy Birthday!",
+        `${profile.first_name}, you've received 200 bonus VS Points! Enjoy your special day!`,
+      );
+    } catch (err) {
+      console.log("Birthday bonus error:", err);
+    }
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -730,17 +950,14 @@ export default function ProfileScreen() {
       quality: 0.7,
     });
     if (result.canceled) return;
-
     setSavingAvatar(true);
     setShowAvatarPicker(false);
-
     try {
       const uri = result.assets[0].uri;
       const fileName = `${user!.id}/avatar.jpg`;
       const response = await fetch(uri);
       const blob = await response.blob();
       const arrayBuffer = await new Response(blob).arrayBuffer();
-
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(fileName, arrayBuffer, {
@@ -748,18 +965,15 @@ export default function ProfileScreen() {
           upsert: true,
         });
       if (uploadError) throw uploadError;
-
       const { data: urlData } = supabase.storage
         .from("avatars")
         .getPublicUrl(fileName);
       const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: publicUrl, avatar_id: null })
         .eq("id", user!.id);
       if (updateError) throw updateError;
-
       setCustomAvatarUri(publicUrl);
       setAvatarId(null);
     } catch (err: any) {
@@ -798,7 +1012,7 @@ export default function ProfileScreen() {
     ]);
   }
 
-  // ── NOT LOGGED IN ──────────────────────────────────────────────────────────
+  // ── NOT LOGGED IN ────────────────────────────────────────────────────────
   if (!user || !profile) {
     return (
       <SafeAreaView
@@ -1112,10 +1326,37 @@ export default function ProfileScreen() {
     );
   }
 
-  // ── LOGGED IN ──────────────────────────────────────────────────────────────
+  // ── LOGGED IN ────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.green }} edges={["top"]}>
       <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+        {/* Birthday banner */}
+        {isBirthday && (
+          <View
+            style={{
+              backgroundColor: "#FEF3C7",
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              borderBottomWidth: 1,
+              borderBottomColor: "#FDE68A",
+            }}
+          >
+            <Text style={{ fontSize: 24 }}>🎂</Text>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{ fontWeight: "800", color: "#92400E", fontSize: 14 }}
+              >
+                Happy Birthday, {profile.first_name}! 🎉
+              </Text>
+              <Text style={{ color: "#B45309", fontSize: 12, marginTop: 2 }}>
+                You've received 200 bonus VS Points today!
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Header */}
         <View
           style={{
@@ -1151,12 +1392,39 @@ export default function ProfileScreen() {
                   marginTop: 4,
                 }}
               >
-                Welcome back,{"\n"}
-                {profile.first_name}!
+                {isBirthday
+                  ? `🎂 Happy Birthday,\n${profile.first_name}!`
+                  : `Welcome back,\n${profile.first_name}!`}
               </Text>
               <Text style={{ color: "#86EFAC", fontSize: 13, marginTop: 4 }}>
                 {profile.email}
               </Text>
+              {birthdayDisplay && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    marginTop: 6,
+                  }}
+                >
+                  <FontAwesome5
+                    name="birthday-cake"
+                    size={12}
+                    color={isBirthday ? C.gold : "rgba(255,255,255,0.5)"}
+                  />
+                  <Text
+                    style={{
+                      color: isBirthday ? C.gold : "rgba(255,255,255,0.5)",
+                      fontSize: 12,
+                      fontWeight: isBirthday ? "700" : "400",
+                    }}
+                  >
+                    {birthdayDisplay}
+                    {isBirthday ? " — Today! 🎉" : ""}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {savingAvatar ? (
@@ -1350,34 +1618,54 @@ export default function ProfileScreen() {
         <View style={{ marginHorizontal: 20, marginTop: 16 }}>
           {activeTab === "points" && (
             <View style={{ gap: 10 }}>
-              {EARN_ITEMS.map((item, i) => (
-                <View
-                  key={i}
-                  style={{
-                    backgroundColor: C.white,
-                    borderRadius: 12,
-                    padding: 16,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 12,
-                    elevation: 2,
-                  }}
-                >
-                  <View style={{ width: 36, alignItems: "center" }}>
-                    {item.icon}
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: "bold", color: C.dark }}>
-                      {item.action}
+              {EARN_ITEMS.map((item, i) => {
+                const highlight = item.isBirthday && isBirthday;
+                return (
+                  <View
+                    key={i}
+                    style={{
+                      backgroundColor: highlight ? "#FEF3C7" : C.white,
+                      borderRadius: 12,
+                      padding: 16,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 12,
+                      elevation: 2,
+                      borderWidth: highlight ? 1.5 : 0,
+                      borderColor: highlight ? C.gold : "transparent",
+                    }}
+                  >
+                    <View style={{ width: 36, alignItems: "center" }}>
+                      {item.icon}
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontWeight: "bold", color: C.dark }}>
+                        {item.action}
+                      </Text>
+                      {highlight && (
+                        <Text
+                          style={{
+                            color: "#B45309",
+                            fontSize: 11,
+                            marginTop: 2,
+                          }}
+                        >
+                          🎂 Active today!
+                        </Text>
+                      )}
+                    </View>
+                    <Text
+                      style={{
+                        color: highlight ? "#B45309" : C.green,
+                        fontWeight: "bold",
+                        fontSize: 13,
+                      }}
+                    >
+                      {item.points}
                     </Text>
                   </View>
-                  <Text
-                    style={{ color: C.green, fontWeight: "bold", fontSize: 13 }}
-                  >
-                    {item.points}
-                  </Text>
-                </View>
-              ))}
+                );
+              })}
             </View>
           )}
 
@@ -1619,7 +1907,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Account Section */}
+        {/* Account */}
         <View
           style={{
             marginHorizontal: 20,
@@ -1642,7 +1930,6 @@ export default function ProfileScreen() {
             Account
           </Text>
 
-          {/* Personal Information */}
           <TouchableOpacity
             onPress={() => setShowPersonalInfo(true)}
             style={{
@@ -1663,7 +1950,6 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
           </TouchableOpacity>
 
-          {/* Member Benefits → switches to tiers tab */}
           <TouchableOpacity
             onPress={() => setActiveTab("tiers")}
             style={{
@@ -1684,7 +1970,6 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
           </TouchableOpacity>
 
-          {/* Email Subscriptions — Switch toggle */}
           <View
             style={{
               flexDirection: "row",
@@ -1717,7 +2002,6 @@ export default function ProfileScreen() {
             />
           </View>
 
-          {/* Sign Out */}
           <TouchableOpacity
             onPress={handleSignOut}
             style={{
@@ -1743,10 +2027,12 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Modals */}
+      {/* Confetti overlay on birthday */}
+      {isBirthday && <BirthdayOverlay name={profile.first_name} />}
+
       <AvatarPickerModal
         visible={showAvatarPicker}
         currentAvatarId={avatarId}
@@ -1765,7 +2051,6 @@ export default function ProfileScreen() {
   );
 }
 
-// ─── Shared input styles ──────────────────────────────────────────────────────
 const labelStyle: any = {
   fontSize: 11,
   fontWeight: "bold",
@@ -1773,7 +2058,6 @@ const labelStyle: any = {
   marginBottom: 6,
   letterSpacing: 1,
 };
-
 const inputStyle: any = {
   borderWidth: 1,
   borderColor: "#E2E8F0",
