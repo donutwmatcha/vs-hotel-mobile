@@ -17,6 +17,7 @@ interface Profile {
   email_subscribed: boolean;
   birthdate: string | null;
   birthday_bonus_year: number | null;
+  member_number: number | null;
 }
 
 interface CheckInRecord {
@@ -24,6 +25,8 @@ interface CheckInRecord {
   checked_in_at: string;
   points_awarded: number;
   action: string;
+  room_type: string | null;
+  room_number: string | null;
 }
 
 interface AuthContextType {
@@ -31,6 +34,7 @@ interface AuthContextType {
   profile: Profile | null;
   lastCheckIn: CheckInRecord | null;
   lastCheckOut: CheckInRecord | null;
+  currentRoom: CheckInRecord | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -41,6 +45,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   lastCheckIn: null,
   lastCheckOut: null,
+  currentRoom: null,
   loading: true,
   signOut: async () => {},
   refreshProfile: async () => {},
@@ -51,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [lastCheckIn, setLastCheckIn] = useState<CheckInRecord | null>(null);
   const [lastCheckOut, setLastCheckOut] = useState<CheckInRecord | null>(null);
+  const [currentRoom, setCurrentRoom] = useState<CheckInRecord | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function fetchProfile(userId: string) {
@@ -86,6 +92,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .limit(1)
       .maybeSingle();
     setLastCheckOut(co ?? null);
+
+    // Current room = most recent check-in that has room info and no checkout after it
+    if (ci && ci.room_type && !co) {
+      setCurrentRoom(ci);
+    } else {
+      setCurrentRoom(null);
+    }
   }
 
   async function refreshProfile() {
@@ -109,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
         setLastCheckIn(null);
         setLastCheckOut(null);
+        setCurrentRoom(null);
       }
       setLoading(false);
     });
@@ -134,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
     setLastCheckIn(null);
     setLastCheckOut(null);
+    setCurrentRoom(null);
   }
 
   return (
@@ -143,6 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         lastCheckIn,
         lastCheckOut,
+        currentRoom,
         loading,
         signOut,
         refreshProfile,

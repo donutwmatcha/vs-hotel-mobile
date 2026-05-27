@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import DiningScreen from "../screens/DiningScreen";
 import HomeScreen from "../screens/HomeScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-import { RoomsScreen } from "../screens/RoomsScreen"; // <- add this
+import { RoomsScreen } from "../screens/RoomsScreen";
 import WellnessScreen from "../screens/WellnessScreen";
 
 const Tab = createBottomTabNavigator();
@@ -17,6 +17,12 @@ export default function BottomTabs() {
         tabBarStyle: {
           backgroundColor: "#111827",
           borderTopWidth: 0,
+          borderTopColor: "transparent",
+          elevation: 0,
+          shadowOpacity: 0,
+          shadowColor: "transparent",
+          shadowOffset: { width: 0, height: 0 },
+          shadowRadius: 0,
         },
         tabBarActiveTintColor: "white",
         tabBarInactiveTintColor: "#6B7280",

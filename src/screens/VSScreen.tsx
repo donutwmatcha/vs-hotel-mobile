@@ -1420,7 +1420,7 @@ export default function VSScreen() {
   };
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={["top"]}>
       <StatusBar barStyle="light-content" backgroundColor={C.green} />
       <ScrollView style={s.scroll} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -1499,7 +1499,7 @@ export default function VSScreen() {
           <Text style={ct.line}>events@vshotel.com.ph</Text>
         </View>
 
-        <View style={{ height: 20 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
       <CarouselBottomSheet

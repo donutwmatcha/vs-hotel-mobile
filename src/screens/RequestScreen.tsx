@@ -1,5 +1,9 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import {
+  FontAwesome5,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +18,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
 const C = {
@@ -124,8 +129,36 @@ const Chip = ({
   </TouchableOpacity>
 );
 
+interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  points_awarded: number;
+}
+
+function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
+  return (
+    <View style={{ flexDirection: "row", gap: 2 }}>
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Ionicons
+          key={s}
+          name={rating >= s ? "star" : "star-outline"}
+          size={size}
+          color={C.gold}
+        />
+      ))}
+    </View>
+  );
+}
+
 export default function RequestScreen() {
-  const [activeTab, setActiveTab] = useState<"request" | "comment">("request");
+  const { user, profile, lastCheckOut } = useAuth();
+  const [activeTab, setActiveTab] = useState<
+    "request" | "feedback" | "history"
+  >("request");
+
+  // Request state
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
   );
@@ -133,9 +166,55 @@ export default function RequestScreen() {
   const [roomNumber, setRoomNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Feedback state
   const [rating, setRating] = useState(0);
   const [commentText, setCommentText] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
+
+  // History state
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Check if user already reviewed this checkout
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === "history") fetchReviews();
+  }, [activeTab]);
+
+  // Check if already reviewed after this checkout
+  useEffect(() => {
+    if (user && lastCheckOut) checkIfReviewed();
+  }, [user, lastCheckOut]);
+
+  async function checkIfReviewed() {
+    if (!user || !lastCheckOut) return;
+    const { data } = await supabase
+      .from("guest_reviews")
+      .select("id")
+      .eq("guest_id", user.id)
+      .gte("created_at", lastCheckOut.checked_in_at)
+      .limit(1);
+    setAlreadyReviewed((data?.length ?? 0) > 0);
+  }
+
+  async function fetchReviews() {
+    if (!user) return;
+    setHistoryLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("guest_reviews")
+        .select("*")
+        .eq("guest_id", user.id)
+        .order("created_at", { ascending: false });
+      if (!error) setReviews(data ?? []);
+    } catch (e) {
+      console.log("Error fetching reviews:", e);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
 
   const resetRequest = () => {
     setSelectedCategory(null);
@@ -144,7 +223,7 @@ export default function RequestScreen() {
     setNotes("");
   };
 
-  const handleSubmitRequest = async () => {
+  async function handleSubmitRequest() {
     if (!selectedCategory) {
       Alert.alert("Missing Info", "Please select a request type.");
       return;
@@ -182,9 +261,9 @@ export default function RequestScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleSubmitComment = async () => {
+  async function handleSubmitFeedback() {
     if (rating === 0) {
       Alert.alert("Missing Rating", "Please give us a star rating.");
       return;
@@ -199,41 +278,81 @@ export default function RequestScreen() {
 
     setCommentLoading(true);
     try {
-      const { error } = await supabase.from("guest_feedback").insert({
+      // Save to guest_feedback
+      const { error: fbError } = await supabase.from("guest_feedback").insert({
         rating,
         comment: commentText.trim(),
         created_at: new Date().toISOString(),
       });
-      if (error) throw error;
-      Alert.alert("Thank You!", "Your feedback helps us serve you better.", [
-        {
-          text: "Done",
-          onPress: () => {
-            setRating(0);
-            setCommentText("");
+      if (fbError) throw fbError;
+
+      // Save to guest_reviews (with guest_id for history) and award 20 points
+      if (user && profile) {
+        await supabase.from("guest_reviews").insert({
+          guest_id: user.id,
+          rating,
+          comment: commentText.trim(),
+          points_awarded: 20,
+          created_at: new Date().toISOString(),
+        });
+        await supabase
+          .from("profiles")
+          .update({
+            points: (profile.points ?? 0) + 20,
+          })
+          .eq("id", user.id);
+      }
+
+      Alert.alert(
+        "Thank You! 🎉",
+        "Your feedback helps us serve you better. You've earned +20 VS Points!",
+        [
+          {
+            text: "Done",
+            onPress: () => {
+              setRating(0);
+              setCommentText("");
+              setAlreadyReviewed(true);
+            },
           },
-        },
-      ]);
+        ],
+      );
     } catch (err: any) {
       Alert.alert("Error", err.message || "Could not submit feedback.");
     } finally {
       setCommentLoading(false);
     }
-  };
+  }
+
+  function formatDate(iso: string) {
+    const d = new Date(iso);
+    return (
+      d.toLocaleDateString("en-PH", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }) +
+      " • " +
+      d.toLocaleTimeString("en-PH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <StatusBar barStyle="light-content" backgroundColor={C.green} />
 
-      {/* ── Green header block ── */}
+      {/* ── Header ── */}
       <View style={styles.headerBlock}>
-        {/* Header text only — headphone icon removed */}
         <View style={styles.header}>
           <Text style={styles.headerEyebrow}>How can we help?</Text>
           <Text style={styles.headerTitle}>Requests & Feedback</Text>
         </View>
 
-        {/* Tab Toggle inside green block so no gap */}
+        {/* 3 tabs */}
         <View style={styles.tabRow}>
           <TouchableOpacity
             style={[styles.tab, activeTab === "request" && styles.tabActive]}
@@ -241,7 +360,7 @@ export default function RequestScreen() {
           >
             <MaterialCommunityIcons
               name="bell-ring-outline"
-              size={16}
+              size={14}
               color={
                 activeTab === "request" ? C.white : "rgba(255,255,255,0.6)"
               }
@@ -252,34 +371,55 @@ export default function RequestScreen() {
                 activeTab === "request" && styles.tabTextActive,
               ]}
             >
-              Make a Request
+              Request
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tab, activeTab === "comment" && styles.tabActive]}
-            onPress={() => setActiveTab("comment")}
+            style={[styles.tab, activeTab === "feedback" && styles.tabActive]}
+            onPress={() => setActiveTab("feedback")}
           >
             <Ionicons
               name="chatbubble-outline"
-              size={15}
+              size={13}
               color={
-                activeTab === "comment" ? C.white : "rgba(255,255,255,0.6)"
+                activeTab === "feedback" ? C.white : "rgba(255,255,255,0.6)"
               }
             />
             <Text
               style={[
                 styles.tabText,
-                activeTab === "comment" && styles.tabTextActive,
+                activeTab === "feedback" && styles.tabTextActive,
               ]}
             >
-              Leave Feedback
+              Feedback
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "history" && styles.tabActive]}
+            onPress={() => setActiveTab("history")}
+          >
+            <Ionicons
+              name="time-outline"
+              size={14}
+              color={
+                activeTab === "history" ? C.white : "rgba(255,255,255,0.6)"
+              }
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "history" && styles.tabTextActive,
+              ]}
+            >
+              My Reviews
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* ── Scrollable content ── */}
+      {/* ── Content ── */}
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: C.offWhite }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -290,6 +430,7 @@ export default function RequestScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* ── REQUEST TAB ── */}
           {activeTab === "request" && (
             <>
               <View style={styles.section}>
@@ -410,89 +551,397 @@ export default function RequestScreen() {
             </>
           )}
 
-          {activeTab === "comment" && (
+          {/* ── FEEDBACK TAB ── */}
+          {activeTab === "feedback" && (
             <>
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>
-                  How was your experience?
-                </Text>
-                <View style={styles.starsRow}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <TouchableOpacity
-                      key={star}
-                      onPress={() => setRating(star)}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons
-                        name={rating >= star ? "star" : "star-outline"}
-                        size={38}
-                        color={rating >= star ? C.gold : C.grayLight}
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                {rating > 0 && (
-                  <Text style={styles.ratingLabel}>
-                    {
-                      ["", "Poor", "Fair", "Good", "Great", "Excellent!"][
-                        rating
-                      ]
-                    }
-                  </Text>
-                )}
-              </View>
-
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Your Comments</Text>
-                <View style={styles.inputRow}>
+              {/* Not logged in */}
+              {!user ? (
+                <View style={{ alignItems: "center", paddingVertical: 40 }}>
                   <Ionicons
-                    name="create-outline"
-                    size={18}
-                    color={C.gray}
-                    style={[
-                      styles.inputIcon,
-                      { alignSelf: "flex-start", marginTop: 14 },
-                    ]}
+                    name="lock-closed-outline"
+                    size={44}
+                    color={C.grayLight}
                   />
-                  <TextInput
-                    style={[styles.inputWithIcon, styles.textareaLarge]}
-                    placeholder="Tell us about your stay — what you loved or how we can improve..."
-                    placeholderTextColor={C.gray}
-                    value={commentText}
-                    onChangeText={setCommentText}
-                    multiline
-                    numberOfLines={6}
-                    textAlignVertical="top"
-                  />
+                  <Text
+                    style={{
+                      color: C.dark,
+                      fontSize: 15,
+                      marginTop: 12,
+                      fontWeight: "600",
+                      textAlign: "center",
+                    }}
+                  >
+                    Sign in to leave a review
+                  </Text>
+                  <Text
+                    style={{
+                      color: C.gray,
+                      fontSize: 13,
+                      marginTop: 6,
+                      textAlign: "center",
+                    }}
+                  >
+                    You need an account to submit feedback and earn VS Points.
+                  </Text>
                 </View>
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.submitBtn,
-                  commentLoading && styles.submitBtnDisabled,
-                ]}
-                onPress={handleSubmitComment}
-                disabled={commentLoading}
-                activeOpacity={0.9}
-              >
-                {commentLoading ? (
-                  <ActivityIndicator color={C.white} />
-                ) : (
-                  <View style={styles.submitBtnInner}>
-                    <Ionicons
-                      name="checkmark-circle-outline"
-                      size={18}
-                      color={C.white}
-                    />
-                    <Text style={styles.submitBtnText}>Submit Feedback</Text>
+              ) : /* Not checked out yet */
+              !lastCheckOut ? (
+                <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                  <Ionicons name="bed-outline" size={44} color={C.grayLight} />
+                  <Text
+                    style={{
+                      color: C.dark,
+                      fontSize: 15,
+                      marginTop: 12,
+                      fontWeight: "600",
+                      textAlign: "center",
+                    }}
+                  >
+                    No checkout yet
+                  </Text>
+                  <Text
+                    style={{
+                      color: C.gray,
+                      fontSize: 13,
+                      marginTop: 6,
+                      textAlign: "center",
+                    }}
+                  >
+                    You can leave a review after your checkout is processed by
+                    the front desk.
+                  </Text>
+                </View>
+              ) : /* Already reviewed this checkout */
+              alreadyReviewed ? (
+                <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                  <Ionicons name="checkmark-circle" size={44} color={C.green} />
+                  <Text
+                    style={{
+                      color: C.dark,
+                      fontSize: 15,
+                      marginTop: 12,
+                      fontWeight: "600",
+                      textAlign: "center",
+                    }}
+                  >
+                    Review submitted!
+                  </Text>
+                  <Text
+                    style={{
+                      color: C.gray,
+                      fontSize: 13,
+                      marginTop: 6,
+                      textAlign: "center",
+                    }}
+                  >
+                    You've already left a review for your latest stay. Thank
+                    you!
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setActiveTab("history")}
+                    style={{
+                      marginTop: 16,
+                      backgroundColor: C.green,
+                      paddingHorizontal: 24,
+                      paddingVertical: 12,
+                      borderRadius: 20,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: C.white,
+                        fontWeight: "700",
+                        fontSize: 14,
+                      }}
+                    >
+                      View My Reviews
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                /* Can review */
+                <>
+                  {/* Points hint */}
+                  <View
+                    style={{
+                      backgroundColor: "#F0FDF4",
+                      borderRadius: 12,
+                      padding: 14,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      marginBottom: 20,
+                      borderWidth: 1,
+                      borderColor: "#BBF7D0",
+                    }}
+                  >
+                    <FontAwesome5 name="star" size={16} color={C.green} solid />
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: C.green,
+                        fontSize: 13,
+                        fontWeight: "600",
+                      }}
+                    >
+                      Leave a review and earn{" "}
+                      <Text style={{ fontWeight: "800" }}>+20 VS Points!</Text>
+                    </Text>
                   </View>
-                )}
-              </TouchableOpacity>
+
+                  <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>
+                      How was your experience?
+                    </Text>
+                    <View style={styles.starsRow}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <TouchableOpacity
+                          key={star}
+                          onPress={() => setRating(star)}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons
+                            name={rating >= star ? "star" : "star-outline"}
+                            size={38}
+                            color={rating >= star ? C.gold : C.grayLight}
+                          />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    {rating > 0 && (
+                      <Text style={styles.ratingLabel}>
+                        {
+                          ["", "Poor", "Fair", "Good", "Great", "Excellent!"][
+                            rating
+                          ]
+                        }
+                      </Text>
+                    )}
+                  </View>
+
+                  <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>Your Comments</Text>
+                    <View style={styles.inputRow}>
+                      <Ionicons
+                        name="create-outline"
+                        size={18}
+                        color={C.gray}
+                        style={[
+                          styles.inputIcon,
+                          { alignSelf: "flex-start", marginTop: 14 },
+                        ]}
+                      />
+                      <TextInput
+                        style={[styles.inputWithIcon, styles.textareaLarge]}
+                        placeholder="Tell us about your stay — what you loved or how we can improve..."
+                        placeholderTextColor={C.gray}
+                        value={commentText}
+                        onChangeText={setCommentText}
+                        multiline
+                        numberOfLines={6}
+                        textAlignVertical="top"
+                      />
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.submitBtn,
+                      commentLoading && styles.submitBtnDisabled,
+                    ]}
+                    onPress={handleSubmitFeedback}
+                    disabled={commentLoading}
+                    activeOpacity={0.9}
+                  >
+                    {commentLoading ? (
+                      <ActivityIndicator color={C.white} />
+                    ) : (
+                      <View style={styles.submitBtnInner}>
+                        <Ionicons
+                          name="checkmark-circle-outline"
+                          size={18}
+                          color={C.white}
+                        />
+                        <Text style={styles.submitBtnText}>
+                          Submit Feedback
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </>
+              )}
             </>
           )}
 
-          <View style={{ height: 20 }} />
+          {/* ── HISTORY TAB ── */}
+          {activeTab === "history" && (
+            <>
+              {!user ? (
+                <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={40}
+                    color={C.gray}
+                  />
+                  <Text
+                    style={{
+                      color: C.gray,
+                      fontSize: 15,
+                      marginTop: 12,
+                      textAlign: "center",
+                    }}
+                  >
+                    Sign in to see your review history
+                  </Text>
+                </View>
+              ) : historyLoading ? (
+                <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                  <ActivityIndicator color={C.green} size="large" />
+                  <Text style={{ color: C.gray, marginTop: 12 }}>
+                    Loading reviews...
+                  </Text>
+                </View>
+              ) : reviews.length === 0 ? (
+                <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={44}
+                    color={C.grayLight}
+                  />
+                  <Text
+                    style={{
+                      color: C.gray,
+                      fontSize: 15,
+                      marginTop: 12,
+                      textAlign: "center",
+                      fontWeight: "600",
+                    }}
+                  >
+                    No reviews yet
+                  </Text>
+                  <Text
+                    style={{
+                      color: C.gray,
+                      fontSize: 13,
+                      marginTop: 6,
+                      textAlign: "center",
+                    }}
+                  >
+                    Leave a review after your stay and earn +20 VS Points!
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setActiveTab("feedback")}
+                    style={{
+                      marginTop: 16,
+                      backgroundColor: C.green,
+                      paddingHorizontal: 24,
+                      paddingVertical: 12,
+                      borderRadius: 20,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: C.white,
+                        fontWeight: "700",
+                        fontSize: 14,
+                      }}
+                    >
+                      Leave a Review
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={{ gap: 14 }}>
+                  <Text
+                    style={{ color: C.gray, fontSize: 13, marginBottom: 4 }}
+                  >
+                    {reviews.length} review{reviews.length !== 1 ? "s" : ""}{" "}
+                    submitted
+                  </Text>
+                  {reviews.map((review) => (
+                    <View
+                      key={review.id}
+                      style={{
+                        backgroundColor: C.white,
+                        borderRadius: 16,
+                        padding: 16,
+                        shadowColor: "#000",
+                        shadowOpacity: 0.05,
+                        shadowRadius: 6,
+                        elevation: 2,
+                      }}
+                    >
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <StarRow rating={review.rating} size={16} />
+                        <View
+                          style={{
+                            backgroundColor: "#F0FDF4",
+                            borderRadius: 20,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                        >
+                          <FontAwesome5
+                            name="star"
+                            size={10}
+                            color={C.green}
+                            solid
+                          />
+                          <Text
+                            style={{
+                              color: C.green,
+                              fontSize: 11,
+                              fontWeight: "700",
+                            }}
+                          >
+                            +{review.points_awarded} pts
+                          </Text>
+                        </View>
+                      </View>
+                      <Text
+                        style={{
+                          color: C.dark,
+                          fontSize: 14,
+                          lineHeight: 20,
+                          marginBottom: 10,
+                        }}
+                      >
+                        {review.comment}
+                      </Text>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <Ionicons
+                          name="time-outline"
+                          size={12}
+                          color={C.gray}
+                        />
+                        <Text style={{ color: C.gray, fontSize: 11 }}>
+                          {formatDate(review.created_at)}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </>
+          )}
+
+          <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -500,19 +949,9 @@ export default function RequestScreen() {
 }
 
 const styles = StyleSheet.create({
-  // SafeAreaView bg matches offWhite so no green bleed at bottom
   safe: { flex: 1, backgroundColor: C.green },
-
-  // Single green block for header + tabs — no gap, no bar
-  headerBlock: {
-    backgroundColor: C.green,
-    paddingBottom: 12,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
-  },
+  headerBlock: { backgroundColor: C.green, paddingBottom: 12 },
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   headerEyebrow: {
     fontSize: 12,
     color: C.goldLight,
@@ -526,13 +965,7 @@ const styles = StyleSheet.create({
     color: C.white,
     marginTop: 2,
   },
-
-  // Tabs
-  tabRow: {
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    gap: 8,
-  },
+  tabRow: { flexDirection: "row", paddingHorizontal: 20, gap: 8 },
   tab: {
     flex: 1,
     flexDirection: "row",
@@ -541,24 +974,18 @@ const styles = StyleSheet.create({
     backgroundColor: C.greenLight,
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    gap: 5,
   },
   tabActive: { backgroundColor: C.gold },
-  tabText: { fontSize: 12, fontWeight: "600", color: "rgba(255,255,255,0.7)" },
+  tabText: { fontSize: 11, fontWeight: "600", color: "rgba(255,255,255,0.7)" },
   tabTextActive: { color: C.white },
-
-  // Scroll
   scroll: {
     flex: 1,
     backgroundColor: C.offWhite,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
   },
-  scrollContent: {
-    paddingTop: 24,
-    paddingHorizontal: 20,
-  },
-
+  scrollContent: { paddingTop: 24, paddingHorizontal: 20 },
   section: { marginBottom: 24 },
   sectionLabel: {
     fontSize: 13,
@@ -568,7 +995,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -587,7 +1013,6 @@ const styles = StyleSheet.create({
   },
   textarea: { height: 80 },
   textareaLarge: { height: 140 },
-
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   categoryCard: {
     width: "47%",
@@ -612,7 +1037,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   categoryLabelActive: { color: C.green },
-
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     paddingHorizontal: 14,
@@ -625,10 +1049,8 @@ const styles = StyleSheet.create({
   chipSelected: { backgroundColor: C.green, borderColor: C.green },
   chipText: { fontSize: 13, color: C.gray, fontWeight: "500" },
   chipTextSelected: { color: C.white, fontWeight: "700" },
-
   starsRow: { flexDirection: "row", gap: 8, marginBottom: 6 },
   ratingLabel: { fontSize: 14, fontWeight: "700", color: C.gold, marginTop: 4 },
-
   submitBtn: {
     backgroundColor: C.green,
     borderRadius: 14,

@@ -1,10 +1,10 @@
-// src/screens/HomeScreen.tsx
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
 import { useFocusEffect } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Dimensions,
   Image,
   Linking,
@@ -15,7 +15,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import MemberCard from "../components/MemberCard";
 import MembershipBanner from "../components/MembershipBanner";
 import RoomsSection from "../components/RoomsSection";
 import { useAuth } from "../context/AuthContext";
@@ -85,23 +84,65 @@ const EVENTS = [
   },
 ];
 
+function fmt(iso: string, type: "time" | "date") {
+  const d = new Date(iso);
+  if (type === "time")
+    return d.toLocaleTimeString("en-PH", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  return d.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
-  const { user, profile, lastCheckIn, lastCheckOut, refreshProfile } =
-    useAuth();
+  const {
+    user,
+    profile,
+    lastCheckIn,
+    lastCheckOut,
+    currentRoom,
+    refreshProfile,
+  } = useAuth();
   const [currentPromo, setCurrentPromo] = useState(0);
   const [weather, setWeather] = useState<{
     temp: string;
     label: string;
     iconName: string;
   } | null>(null);
+  const lastCheckOutId = useRef<string | null>(null);
+
+  // Show review prompt when a new checkout is detected
+  useEffect(() => {
+    if (lastCheckOut && lastCheckOut.id !== lastCheckOutId.current) {
+      lastCheckOutId.current = lastCheckOut.id;
+      // Small delay so the screen finishes loading first
+      setTimeout(() => {
+        Alert.alert(
+          "Thanks for staying with us! 🏨",
+          "We hope you had a wonderful time. Would you like to leave a review? You'll earn +20 VS Points!",
+          [
+            { text: "Maybe Later", style: "cancel" },
+            {
+              text: "Leave a Review ⭐",
+              onPress: () => navigation.navigate("Request"),
+            },
+          ],
+        );
+      }, 1000);
+    }
+  }, [lastCheckOut]);
 
   const scrollRef = useRef<ScrollView>(null);
   const mainScrollRef = useRef<ScrollView>(null);
 
   const userName = profile?.first_name ?? null;
   const userPoints = profile?.points ?? null;
-  const userId = user?.id ?? null;
   const memberRank =
     (profile?.points ?? 0) >= 5000
       ? "Platinum Member"
@@ -142,6 +183,8 @@ export default function HomeScreen() {
     if (hour < 18) return "Good Afternoon,";
     return "Good Evening,";
   }
+
+  const isCheckedIn = !!lastCheckIn && !lastCheckOut;
 
   return (
     <ScrollView
@@ -350,16 +393,181 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* ── MEMBER CARD ── */}
-      {userName && userId && (
-        <MemberCard
-          userId={userId}
-          userName={userName}
-          memberRank={memberRank}
-          points={userPoints ?? 0}
-          lastCheckIn={lastCheckIn}
-          lastCheckOut={lastCheckOut}
-        />
+      {/* ── CHECK-IN STATUS CARD ── */}
+      {userName && (lastCheckIn || lastCheckOut) && (
+        <View
+          style={{
+            marginHorizontal: 16,
+            marginTop: 12,
+            borderRadius: 16,
+            overflow: "hidden",
+            shadowColor: "#000",
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            elevation: 3,
+          }}
+        >
+          {/* Header */}
+          <View
+            style={{
+              backgroundColor: isCheckedIn ? C.green : "#DC2626",
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <View
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor: isCheckedIn ? "#86EFAC" : "#FCA5A5",
+              }}
+            />
+            <Text style={{ color: C.white, fontWeight: "800", fontSize: 14 }}>
+              {isCheckedIn ? "Currently Checked In" : "Checked Out"}
+            </Text>
+          </View>
+
+          {/* Body */}
+          <View style={{ backgroundColor: C.white, padding: 16, gap: 10 }}>
+            {/* Check-in info */}
+            {lastCheckIn && (
+              <>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: "#64748B",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Checked In
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: "#0F172A",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {fmt(lastCheckIn.checked_in_at, "date")}{" "}
+                    {fmt(lastCheckIn.checked_in_at, "time")}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: "#64748B",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Points Earned
+                  </Text>
+                  <Text
+                    style={{ fontSize: 12, color: C.green, fontWeight: "700" }}
+                  >
+                    +{lastCheckIn.points_awarded} VS Points
+                  </Text>
+                </View>
+                {lastCheckIn.room_type && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: "#64748B",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Room Type
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: "#0F172A",
+                        fontWeight: "700",
+                      }}
+                    >
+                      {lastCheckIn.room_type}
+                    </Text>
+                  </View>
+                )}
+                {lastCheckIn.room_number && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: "#64748B",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Room Number
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: "#0F172A",
+                        fontWeight: "700",
+                      }}
+                    >
+                      Room {lastCheckIn.room_number}
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+
+            {/* Divider if both */}
+            {lastCheckIn && lastCheckOut && (
+              <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
+            )}
+
+            {/* Check-out info */}
+            {lastCheckOut && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text
+                  style={{ fontSize: 12, color: "#64748B", fontWeight: "600" }}
+                >
+                  Checked Out
+                </Text>
+                <Text
+                  style={{ fontSize: 12, color: "#DC2626", fontWeight: "700" }}
+                >
+                  {fmt(lastCheckOut.checked_in_at, "date")}{" "}
+                  {fmt(lastCheckOut.checked_in_at, "time")}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
       )}
 
       {/* ── ROOMS ── */}
@@ -770,7 +978,7 @@ export default function HomeScreen() {
         memberRank={memberRank}
       />
 
-      <View style={{ height: 90 }} />
+      <View style={{ height: 20 }} />
     </ScrollView>
   );
 }

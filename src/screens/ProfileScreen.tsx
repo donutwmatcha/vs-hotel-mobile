@@ -23,6 +23,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import MemberCard from "../components/MemberCard";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
@@ -1307,7 +1308,7 @@ export default function ProfileScreen() {
             style={{
               alignItems: "center",
               paddingVertical: 20,
-              marginBottom: 80,
+              marginBottom: 20,
               flexDirection: "row",
               justifyContent: "center",
               gap: 6,
@@ -1430,9 +1431,9 @@ export default function ProfileScreen() {
             {savingAvatar ? (
               <View
                 style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
+                  width: 110,
+                  height: 110,
+                  borderRadius: 55,
                   backgroundColor: "rgba(255,255,255,0.2)",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1444,44 +1445,28 @@ export default function ProfileScreen() {
               <AvatarDisplay
                 avatarId={avatarId}
                 customUri={customAvatarUri}
-                size={80}
+                size={110}
                 onPress={() => setShowAvatarPicker(true)}
               />
             )}
           </View>
-
-          {/* Tier badge */}
-          <View
-            style={{
-              backgroundColor: "rgba(255,255,255,0.15)",
-              borderRadius: 12,
-              paddingVertical: 10,
-              paddingHorizontal: 16,
-              marginTop: 16,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            {currentTier.icon}
-            <Text style={{ color: C.white, fontWeight: "bold", fontSize: 15 }}>
-              {currentTier.name} Member
-            </Text>
-            <Text
-              style={{ color: "#86EFAC", fontSize: 12, marginLeft: "auto" }}
-            >
-              #{profile.id.slice(0, 8).toUpperCase()}
-            </Text>
-          </View>
         </View>
 
         {/* Stats */}
+        <MemberCard
+          userId={user.id}
+          userName={`${profile.first_name} ${profile.last_name}`}
+          memberRank={currentTier.name + " Member"}
+          points={profile.points}
+          memberNumber={profile.member_number}
+        />
+
         <View
           style={{
             flexDirection: "row",
             backgroundColor: C.white,
             marginHorizontal: 20,
-            marginTop: -20,
+            marginTop: 16,
             borderRadius: 16,
             padding: 20,
             shadowColor: "#000",
@@ -2027,7 +2012,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 20 }} />
       </ScrollView>
 
       {/* Confetti overlay on birthday */}
