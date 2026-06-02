@@ -1,7 +1,6 @@
 import { HapticTab } from "@/components/haptic-tab";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
@@ -83,8 +82,6 @@ export default function TabLayout() {
       {/* Hidden screens */}
       <Tabs.Screen name="booking" options={{ href: null }} />
       <Tabs.Screen name="rooms" options={{ href: null }} />
-      <Tabs.Screen name="dining" options={{ href: null }} />
-      <Tabs.Screen name="wellness" options={{ href: null }} />
       <Tabs.Screen name="signup" options={{ href: null }} />
       <Tabs.Screen name="signin" options={{ href: null }} />
       <Tabs.Screen name="verify" options={{ href: null }} />

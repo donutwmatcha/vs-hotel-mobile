@@ -134,6 +134,20 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
       require("../assets/vsscreen/vstogo-cafe-4.jpg"),
     ],
   },
+  {
+    id: "ballroom",
+    title: "Grand Ballroom",
+    subtitle: "Function Halls & Events",
+    description:
+      "Host your most memorable events at VS Hotel's Grand Ballroom. Whether it's a grand wedding, corporate gala, or social celebration, our versatile function halls offer world-class facilities, impeccable service, and an elegant setting that makes every occasion truly unforgettable.",
+    fallbackBg: "#1A0D2E",
+    accentColor: "#2D1A4A",
+    url: "https://www.vshotel.com.ph/events",
+    images: [
+      require("../assets/vsscreen/ballroom-1.jpg"),
+      require("../assets/vsscreen/ballroom-2.jpg"),
+    ],
+  },
 ];
 
 // ─── Retail Data ──────────────────────────────────────────────────────────────
@@ -1076,7 +1090,7 @@ function EditorialCard({
       <LinearGradient
         colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.92)"]}
         locations={[0, 0.45, 1]}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       {/* Text content sits on top */}
@@ -1425,12 +1439,7 @@ export default function VSScreen() {
       <ScrollView style={s.scroll} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={s.header}>
-          <View>
-            <Text style={s.headerTitle}>More from VS Hotel Corp.</Text>
-          </View>
-          <View style={s.vsCircle}>
-            <Text style={s.vsCircleText}>VS</Text>
-          </View>
+          <Text style={s.headerTitle}>More from VS Hotel Corp.</Text>
         </View>
 
         {/* Carousel */}
@@ -1530,7 +1539,7 @@ const car = StyleSheet.create({
     padding: 20,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.42)",
   },
   photoPill: {

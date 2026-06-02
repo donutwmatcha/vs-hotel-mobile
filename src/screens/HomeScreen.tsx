@@ -1,8 +1,7 @@
+// src/screens/HomeScreen.tsx
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { ResizeMode, Video } from "expo-av";
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -100,7 +99,6 @@ function fmt(iso: string, type: "time" | "date") {
 }
 
 export default function HomeScreen() {
-  const navigation = useNavigation<any>();
   const {
     user,
     profile,
@@ -116,27 +114,7 @@ export default function HomeScreen() {
     iconName: string;
   } | null>(null);
   const lastCheckOutId = useRef<string | null>(null);
-
-  // Show review prompt when a new checkout is detected
-  useEffect(() => {
-    if (lastCheckOut && lastCheckOut.id !== lastCheckOutId.current) {
-      lastCheckOutId.current = lastCheckOut.id;
-      // Small delay so the screen finishes loading first
-      setTimeout(() => {
-        Alert.alert(
-          "Thanks for staying with us! 🏨",
-          "We hope you had a wonderful time. Would you like to leave a review? You'll earn +20 VS Points!",
-          [
-            { text: "Maybe Later", style: "cancel" },
-            {
-              text: "Leave a Review ⭐",
-              onPress: () => navigation.navigate("Request"),
-            },
-          ],
-        );
-      }, 1000);
-    }
-  }, [lastCheckOut]);
+  const reviewPromptShown = useRef(false);
 
   const scrollRef = useRef<ScrollView>(null);
   const mainScrollRef = useRef<ScrollView>(null);
@@ -150,13 +128,42 @@ export default function HomeScreen() {
         ? "Gold Member"
         : "Silver Member";
 
+  const isCheckedIn = !!lastCheckIn && !lastCheckOut;
+
   useFocusEffect(
     useCallback(() => {
       mainScrollRef.current?.scrollTo({ y: 0, animated: false });
       refreshProfile();
       fetchWeather();
+      reviewPromptShown.current = false;
     }, []),
   );
+
+  // Show review prompt when a new checkout is detected
+  useEffect(() => {
+    if (
+      lastCheckOut &&
+      lastCheckOut.id !== lastCheckOutId.current &&
+      !reviewPromptShown.current &&
+      user
+    ) {
+      lastCheckOutId.current = lastCheckOut.id;
+      reviewPromptShown.current = true;
+      setTimeout(() => {
+        Alert.alert(
+          "Thanks for staying with us! 🏨",
+          "We hope you had a wonderful time. Would you like to leave a review? You'll earn +20 VS Points!",
+          [
+            { text: "Maybe Later", style: "cancel" },
+            {
+              text: "Leave a Review ⭐",
+              onPress: () => router.push("/request"),
+            },
+          ],
+        );
+      }, 1000);
+    }
+  }, [lastCheckOut, user]);
 
   async function fetchWeather() {
     try {
@@ -184,8 +191,6 @@ export default function HomeScreen() {
     return "Good Evening,";
   }
 
-  const isCheckedIn = !!lastCheckIn && !lastCheckOut;
-
   return (
     <ScrollView
       ref={mainScrollRef}
@@ -211,15 +216,14 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* ── HERO VIDEO ── */}
+      {/* ── HERO IMAGE ── */}
       <View style={{ position: "relative" }}>
-        <Video
-          source={require("../assets/videos/HOTEL-AVP.mp4")}
+        <Image
+          source={{
+            uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780225673/bookbyjune1_sxfwil.png",
+          }}
           style={{ width: "100%", height: 280 }}
-          resizeMode={ResizeMode.COVER}
-          shouldPlay
-          isLooping
-          isMuted
+          resizeMode="cover"
         />
         <View
           style={{ position: "absolute", bottom: -22, alignSelf: "center" }}
@@ -351,7 +355,7 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Member rank pill */}
+          {/* Member rank pill / Sign in button */}
           {userName ? (
             <View
               style={{
@@ -372,7 +376,7 @@ export default function HomeScreen() {
             </View>
           ) : (
             <TouchableOpacity
-              onPress={() => navigation.navigate("SignIn")}
+              onPress={() => router.push("/signin")}
               style={{
                 backgroundColor: C.green,
                 borderRadius: 30,
@@ -393,8 +397,8 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* ── CHECK-IN STATUS CARD ── */}
-      {userName && (lastCheckIn || lastCheckOut) && (
+      {/* ── CHECK-IN STATUS CARD ── always show when logged in */}
+      {userName && (
         <View
           style={{
             marginHorizontal: 16,
@@ -410,7 +414,11 @@ export default function HomeScreen() {
           {/* Header */}
           <View
             style={{
-              backgroundColor: isCheckedIn ? C.green : "#DC2626",
+              backgroundColor: isCheckedIn
+                ? C.green
+                : lastCheckOut
+                  ? "#DC2626"
+                  : "#64748B",
               paddingHorizontal: 16,
               paddingVertical: 12,
               flexDirection: "row",
@@ -423,94 +431,151 @@ export default function HomeScreen() {
                 width: 10,
                 height: 10,
                 borderRadius: 5,
-                backgroundColor: isCheckedIn ? "#86EFAC" : "#FCA5A5",
+                backgroundColor: isCheckedIn
+                  ? "#86EFAC"
+                  : lastCheckOut
+                    ? "#FCA5A5"
+                    : "#CBD5E1",
               }}
             />
             <Text style={{ color: C.white, fontWeight: "800", fontSize: 14 }}>
-              {isCheckedIn ? "Currently Checked In" : "Checked Out"}
+              {isCheckedIn
+                ? "Currently Checked In"
+                : lastCheckOut
+                  ? "Checked Out"
+                  : "Not Currently Checked In"}
             </Text>
           </View>
 
           {/* Body */}
           <View style={{ backgroundColor: C.white, padding: 16, gap: 10 }}>
-            {/* Check-in info */}
-            {lastCheckIn && (
+            {!lastCheckIn && !lastCheckOut ? (
+              <Text
+                style={{
+                  color: "#64748B",
+                  fontSize: 13,
+                  textAlign: "center",
+                  paddingVertical: 4,
+                }}
+              >
+                Your check-in status will appear here once the front desk scans
+                your QR code.
+              </Text>
+            ) : (
               <>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: "#64748B",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Checked In
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: "#0F172A",
-                      fontWeight: "700",
-                    }}
-                  >
-                    {fmt(lastCheckIn.checked_in_at, "date")}{" "}
-                    {fmt(lastCheckIn.checked_in_at, "time")}
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: "#64748B",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Points Earned
-                  </Text>
-                  <Text
-                    style={{ fontSize: 12, color: C.green, fontWeight: "700" }}
-                  >
-                    +{lastCheckIn.points_awarded} VS Points
-                  </Text>
-                </View>
-                {lastCheckIn.room_type && (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Text
+                {lastCheckIn && (
+                  <>
+                    <View
                       style={{
-                        fontSize: 12,
-                        color: "#64748B",
-                        fontWeight: "600",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
                       }}
                     >
-                      Room Type
-                    </Text>
-                    <Text
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#64748B",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Checked In
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#0F172A",
+                          fontWeight: "700",
+                        }}
+                      >
+                        {fmt(lastCheckIn.checked_in_at, "date")}{" "}
+                        {fmt(lastCheckIn.checked_in_at, "time")}
+                      </Text>
+                    </View>
+                    <View
                       style={{
-                        fontSize: 12,
-                        color: "#0F172A",
-                        fontWeight: "700",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
                       }}
                     >
-                      {lastCheckIn.room_type}
-                    </Text>
-                  </View>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#64748B",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Points Earned
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: C.green,
+                          fontWeight: "700",
+                        }}
+                      >
+                        +{lastCheckIn.points_awarded} VS Points
+                      </Text>
+                    </View>
+                    {lastCheckIn.room_type && (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#64748B",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Room Type
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#0F172A",
+                            fontWeight: "700",
+                          }}
+                        >
+                          {lastCheckIn.room_type}
+                        </Text>
+                      </View>
+                    )}
+                    {lastCheckIn.room_number && (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#64748B",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Room Number
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#0F172A",
+                            fontWeight: "700",
+                          }}
+                        >
+                          Room {lastCheckIn.room_number}
+                        </Text>
+                      </View>
+                    )}
+                  </>
                 )}
-                {lastCheckIn.room_number && (
+                {lastCheckIn && lastCheckOut && (
+                  <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
+                )}
+                {lastCheckOut && (
                   <View
                     style={{
                       flexDirection: "row",
@@ -524,47 +589,21 @@ export default function HomeScreen() {
                         fontWeight: "600",
                       }}
                     >
-                      Room Number
+                      Checked Out
                     </Text>
                     <Text
                       style={{
                         fontSize: 12,
-                        color: "#0F172A",
+                        color: "#DC2626",
                         fontWeight: "700",
                       }}
                     >
-                      Room {lastCheckIn.room_number}
+                      {fmt(lastCheckOut.checked_in_at, "date")}{" "}
+                      {fmt(lastCheckOut.checked_in_at, "time")}
                     </Text>
                   </View>
                 )}
               </>
-            )}
-
-            {/* Divider if both */}
-            {lastCheckIn && lastCheckOut && (
-              <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
-            )}
-
-            {/* Check-out info */}
-            {lastCheckOut && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Text
-                  style={{ fontSize: 12, color: "#64748B", fontWeight: "600" }}
-                >
-                  Checked Out
-                </Text>
-                <Text
-                  style={{ fontSize: 12, color: "#DC2626", fontWeight: "700" }}
-                >
-                  {fmt(lastCheckOut.checked_in_at, "date")}{" "}
-                  {fmt(lastCheckOut.checked_in_at, "time")}
-                </Text>
-              </View>
             )}
           </View>
         </View>
