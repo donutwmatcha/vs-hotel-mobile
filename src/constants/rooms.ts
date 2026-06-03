@@ -12,14 +12,12 @@ export interface Room {
   price: number;
   capacity: number;
   size: string;
-  image: any;
-  gallery: any[];
+  image: { uri: string };
+  gallery: { uri: string }[];
   bedding: string;
   facilities: { category: string; items: string[] }[];
   rates: RateOption[];
 }
-
-const FAMILY_KINGS_ESCAPE = null;
 
 export const ROOMS: Room[] = [
   {
@@ -30,15 +28,31 @@ export const ROOMS: Room[] = [
     price: 5600,
     capacity: 4,
     size: "20 sqm",
-    image: require("../assets/room-cards/standard-junior-room.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779502235/standard-junior-room_hpso8g.jpg",
+    },
     gallery: [
-      require("../assets/room-gallery/standard-junior-room/standard-junior-room-1.jpg"),
-      require("../assets/room-gallery/standard-junior-room/standard-junior-room-2.jpg"),
-      require("../assets/room-gallery/standard-junior-room/standard-junior-room-3.jpg"),
-      require("../assets/room-gallery/standard-junior-room/standard-junior-room-4.jpg"),
-      require("../assets/room-gallery/standard-junior-room/standard-junior-room-5.jpg"),
-      require("../assets/room-gallery/standard-junior-room/standard-junior-room-6.jpg"),
-      require("../assets/room-gallery/standard-junior-room/standard-junior-room-7.jpg"),
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673892/standard-junior-room-1_w9hj1m.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673910/standard-junior-room-2_afz458.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673907/standard-junior-room-3_bwzonb.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673904/standard-junior-room-4_vc35hb.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673901/standard-junior-room-5_rltj3z.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673895/standard-junior-room-6_ts6joz.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673898/standard-junior-room-7_n1iaa4.jpg",
+      },
     ],
     bedding: "1 Queen",
     facilities: [
@@ -109,14 +123,28 @@ export const ROOMS: Room[] = [
     price: 7500,
     capacity: 4,
     size: "27 sqm",
-    image: require("../assets/room-cards/standard-queen-room.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779502178/standard-queen-room_knamrw.jpg",
+    },
     gallery: [
-      require("../assets/room-gallery/standard-queen-room/standard-queen-room-1.jpg"),
-      require("../assets/room-gallery/standard-queen-room/standard-queen-room-2.jpg"),
-      require("../assets/room-gallery/standard-queen-room/standard-queen-room-3.jpg"),
-      require("../assets/room-gallery/standard-queen-room/standard-queen-room-4.jpg"),
-      require("../assets/room-gallery/standard-queen-room/standard-queen-room-5.jpg"),
-      require("../assets/room-gallery/standard-queen-room/standard-queen-room-6.jpg"),
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673964/standard-queen-room-1_dg0dvn.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673979/standard-queen-room-2_gdc641.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673976/standard-queen-room-3_ya61sa.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673973/standard-queen-room-4_gxkzdt.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673970/standard-queen-room-5_mmtphy.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673967/standard-queen-room-6_sv5vgy.jpg",
+      },
     ],
     bedding: "1 Queen",
     facilities: [
@@ -186,12 +214,22 @@ export const ROOMS: Room[] = [
     price: 7000,
     capacity: 4,
     size: "33 sqm",
-    image: require("../assets/room-cards/premium-queen-room.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779502176/premium-queen-room_xyn2uj.jpg",
+    },
     gallery: [
-      require("../assets/room-gallery/premium-queen-room/premium-queen-room-1.jpg"),
-      require("../assets/room-gallery/premium-queen-room/premium-queen-room-2.jpg"),
-      require("../assets/room-gallery/premium-queen-room/premium-queen-room-3.jpg"),
-      require("../assets/room-gallery/premium-queen-room/premium-queen-room-4.jpg"),
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673856/premium-queen-room-1_gj5lr0.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673858/premium-queen-room-2_iww9wi.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673863/premium-queen-room-3_dlh05i.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673864/premium-queen-room-4_kksiaf.jpg",
+      },
     ],
     bedding: "1 Queen",
     facilities: [
@@ -261,16 +299,34 @@ export const ROOMS: Room[] = [
     price: 7800,
     capacity: 4,
     size: "35 sqm",
-    image: require("../assets/room-cards/king-room.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779502176/king-room_gwubya.jpg",
+    },
     gallery: [
-      require("../assets/room-gallery/king-room/king-room-1.jpg"),
-      require("../assets/room-gallery/king-room/king-room-2.jpg"),
-      require("../assets/room-gallery/king-room/king-room-3.jpg"),
-      require("../assets/room-gallery/king-room/king-room-4.jpg"),
-      require("../assets/room-gallery/king-room/king-room-5.jpg"),
-      require("../assets/room-gallery/king-room/king-room-6.jpg"),
-      require("../assets/room-gallery/king-room/king-room-7.jpg"),
-      require("../assets/room-gallery/king-room/king-room-8.jpg"),
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673702/king-room-1_kll4rb.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673719/king-room-2_x4ywdz.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673716/king-room-3_i41wom.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673714/king-room-4_dycuef.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673711/king-room-5_wxdffe.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673708/king-room-6_vzjaib.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673705/king-room-7_fro5in.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673700/king-room-8_oljgpq.jpg",
+      },
     ],
     bedding: "1 King",
     facilities: [
@@ -340,13 +396,25 @@ export const ROOMS: Room[] = [
     price: 19000,
     capacity: 6,
     size: "70 sqm",
-    image: require("../assets/room-cards/family-room.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779502221/family-room_ijvefh.jpg",
+    },
     gallery: [
-      require("../assets/room-gallery/family-room/family-room-1.jpg"),
-      require("../assets/room-gallery/family-room/family-room-2.jpg"),
-      require("../assets/room-gallery/family-room/family-room-3.jpg"),
-      require("../assets/room-gallery/family-room/family-room-4.jpg"),
-      require("../assets/room-gallery/family-room/family-room-5.jpg"),
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673658/family-room-1_qclsel.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673668/family-room-2_za5zbf.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673666/family-room-3_warin1.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673663/family-room-4_tkufg1.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779673660/family-room-5_j2krpa.jpg",
+      },
     ],
     bedding: "1 King and 2 Singles",
     facilities: [
@@ -405,18 +473,40 @@ export const ROOMS: Room[] = [
     price: 11000,
     capacity: 4,
     size: "78 sqm",
-    image: require("../assets/room-cards/suite-room.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779502177/suite-room_yvjrsc.jpg",
+    },
     gallery: [
-      require("../assets/room-gallery/suite-room/suite-room-1.jpg"),
-      require("../assets/room-gallery/suite-room/suite-room-2.jpg"),
-      require("../assets/room-gallery/suite-room/suite-room-3.jpg"),
-      require("../assets/room-gallery/suite-room/suite-room-4.jpg"),
-      require("../assets/room-gallery/suite-room/suite-room-5.jpg"),
-      require("../assets/room-gallery/suite-room/suite-room-6.jpg"),
-      require("../assets/room-gallery/suite-room/suite-room-7.jpg"),
-      require("../assets/room-gallery/suite-room/suite-room-8.jpg"),
-      require("../assets/room-gallery/suite-room/suite-room-9.jpg"),
-      require("../assets/room-gallery/suite-room/suite-room-10.jpg"),
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674014/suite-room-1_bxvth8.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674043/suite-room-2_dkt2r8.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674040/suite-room-3_goh2zr.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674037/suite-room-4_dsf69z.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674033/suite-room-5_ppankc.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674030/suite-room-6_zhdlne.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674027/suite-room-7_pcq8uv.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674020/suite-room-8_djdxwj.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674024/suite-room-9_wiw9c1.jpg",
+      },
+      {
+        uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674017/suite-room-10_fxp2dr.jpg",
+      },
     ],
     bedding: "1 King",
     facilities: [

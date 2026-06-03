@@ -403,6 +403,7 @@ export default function HomeScreen() {
           style={{
             marginHorizontal: 16,
             marginTop: 12,
+            marginBottom: 8,
             borderRadius: 16,
             overflow: "hidden",
             shadowColor: "#000",
