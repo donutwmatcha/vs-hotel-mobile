@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import MembershipBanner from "../components/MembershipBanner";
 import RoomsSection from "../components/RoomsSection";
 import { useAuth } from "../context/AuthContext";
 
@@ -42,44 +41,74 @@ function getWeatherInfo(code: number): { label: string; iconName: string } {
 const { width } = Dimensions.get("window");
 
 const PROMOS = [
-  { id: "1", image: require("../assets/promos/advisory.jpg") },
-  { id: "2", image: require("../assets/promos/mlbb_rewards.jpg") },
-  { id: "3", image: require("../assets/promos/summer_coolers.jpg") },
-  { id: "4", image: require("../assets/promos/forever_queen_promo.jpg") },
-  { id: "5", image: require("../assets/promos/splash_and_play.jpg") },
-  { id: "6", image: require("../assets/promos/mothers_day_greeting.jpg") },
-];
-
-const EVENTS = [
   {
     id: "1",
-    date: "MAY 18",
-    day: "SUN",
-    title: "Mother's Day Brunch Buffet",
-    description: "Celebrate Mom with our special brunch spread at VS Dining.",
-    tag: "Dining",
-    color: "#C89B3C",
-    iconName: "utensils",
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780473723/june-cinema_juo313.jpg",
+    },
   },
   {
     id: "2",
-    date: "MAY 24",
-    day: "SAT",
-    title: "Live Acoustic Night",
-    description: "Unwind with live music at the VS Lounge every Saturday.",
-    tag: "Entertainment",
-    color: "#14532D",
-    iconName: "music",
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780501885/pride26_xaar8x.jpg",
+    },
   },
   {
     id: "3",
-    date: "MAY 31",
-    day: "SAT",
-    title: "Splash & Play Weekend",
-    description: "Kids' pool activities and summer fun for the whole family.",
-    tag: "Leisure",
-    color: "#0369A1",
-    iconName: "swimmer",
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780501886/nacho_a6ljf9.jpg",
+    },
+  },
+  {
+    id: "4",
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780501894/father_s-day_cslkws.jpg",
+    },
+  },
+];
+
+const REVIEWS = [
+  {
+    name: "JUICE",
+    date: "March 04, 2026",
+    title: "First try staycation",
+    review:
+      "It was my first time to try go in on a staycation and VS hotel did not disappoint me. I was surprised that the room that I book was actually so large and I have it all for one night. I'll definitely go back.",
+  },
+  {
+    name: "MARC",
+    date: "March 09, 2026",
+    title: "Best Sleep this Year",
+    review:
+      "One of the best is my sleep as it gave me deep, serene and nice sleep during my stay. No insects roaming as well the facility is so clean.",
+  },
+  {
+    name: "MARILOU",
+    date: "March 16, 2026",
+    title: "Amazing stay in VS Hotel",
+    review:
+      "The Housekeeping supervisor is very helpful and has a very excellent customer service. The facility is very clean and smells good. It is really value for your money!",
+  },
+  {
+    name: "MYRA",
+    date: "March 18, 2026",
+    title: "Great Hotel!",
+    review:
+      "My son and daughter enjoy the bath tub. No one bother us and staff are courteous. Fast check in and check out. Over all I want to stay here again.",
+  },
+  {
+    name: "MARILYN",
+    date: "April 08, 2026",
+    title: "Worthwhile Stay",
+    review:
+      "Our family thoroughly enjoyed the amenities that VS Hotel offers. It was a wonderful experience that fostered family bonding and created special moments of togetherness for the kids.",
+  },
+  {
+    name: "GENALYNE",
+    date: "April 09, 2026",
+    title: "Exceptional",
+    review:
+      "The location was perfect for shopping, well maintained bathrooms. The staff were friendly and attentive, making the overall experience seamless. Great value for money.",
   },
 ];
 
@@ -99,14 +128,8 @@ function fmt(iso: string, type: "time" | "date") {
 }
 
 export default function HomeScreen() {
-  const {
-    user,
-    profile,
-    lastCheckIn,
-    lastCheckOut,
-    currentRoom,
-    refreshProfile,
-  } = useAuth();
+  const { user, profile, lastCheckIn, lastCheckOut, refreshProfile } =
+    useAuth();
   const [currentPromo, setCurrentPromo] = useState(0);
   const [weather, setWeather] = useState<{
     temp: string;
@@ -115,7 +138,6 @@ export default function HomeScreen() {
   } | null>(null);
   const lastCheckOutId = useRef<string | null>(null);
   const reviewPromptShown = useRef(false);
-
   const scrollRef = useRef<ScrollView>(null);
   const mainScrollRef = useRef<ScrollView>(null);
 
@@ -139,7 +161,6 @@ export default function HomeScreen() {
     }, []),
   );
 
-  // Show review prompt when a new checkout is detected
   useEffect(() => {
     if (
       lastCheckOut &&
@@ -151,12 +172,12 @@ export default function HomeScreen() {
       reviewPromptShown.current = true;
       setTimeout(() => {
         Alert.alert(
-          "Thanks for staying with us! 🏨",
+          "Thanks for staying with us! \uD83C\uDFE8",
           "We hope you had a wonderful time. Would you like to leave a review? You'll earn +20 VS Points!",
           [
             { text: "Maybe Later", style: "cancel" },
             {
-              text: "Leave a Review ⭐",
+              text: "Leave a Review \u2B50",
               onPress: () => router.push("/request"),
             },
           ],
@@ -173,9 +194,9 @@ export default function HomeScreen() {
       const data = await res.json();
       const { temperature, weathercode } = data.current_weather;
       const info = getWeatherInfo(weathercode);
-      setWeather({ temp: `${Math.round(temperature)}°C`, ...info });
+      setWeather({ temp: `${Math.round(temperature)}\u00B0C`, ...info });
     } catch {
-      setWeather({ temp: "--°C", label: "N/A", iconName: "thermometer" });
+      setWeather({ temp: "--\u00B0C", label: "N/A", iconName: "thermometer" });
     }
   }
 
@@ -196,7 +217,7 @@ export default function HomeScreen() {
       ref={mainScrollRef}
       style={{ flex: 1, backgroundColor: C.white }}
     >
-      {/* ── HEADER ── */}
+      {/* HEADER */}
       <View
         style={{
           backgroundColor: C.green,
@@ -216,7 +237,7 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* ── HERO IMAGE ── */}
+      {/* HERO */}
       <View style={{ position: "relative" }}>
         <Image
           source={{
@@ -256,7 +277,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* ── GREETING CARD ── */}
+      {/* GREETING CARD */}
       <View style={{ paddingHorizontal: 16, paddingTop: 40, paddingBottom: 8 }}>
         <View
           style={{
@@ -315,8 +336,6 @@ export default function HomeScreen() {
                   : "0 VS Points"}
               </Text>
             </View>
-
-            {/* Weather */}
             <View
               style={{
                 alignItems: "center",
@@ -340,7 +359,7 @@ export default function HomeScreen() {
                   marginTop: 4,
                 }}
               >
-                {weather ? weather.temp : "--°C"}
+                {weather ? weather.temp : "--\u00B0C"}
               </Text>
               <Text
                 style={{
@@ -354,8 +373,6 @@ export default function HomeScreen() {
               </Text>
             </View>
           </View>
-
-          {/* Member rank pill / Sign in button */}
           {userName ? (
             <View
               style={{
@@ -397,7 +414,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* ── CHECK-IN STATUS CARD ── always show when logged in */}
+      {/* CHECK-IN STATUS */}
       {userName && (
         <View
           style={{
@@ -412,7 +429,6 @@ export default function HomeScreen() {
             elevation: 3,
           }}
         >
-          {/* Header */}
           <View
             style={{
               backgroundColor: isCheckedIn
@@ -447,8 +463,6 @@ export default function HomeScreen() {
                   : "Not Currently Checked In"}
             </Text>
           </View>
-
-          {/* Body */}
           <View style={{ backgroundColor: C.white, padding: 16, gap: 10 }}>
             {!lastCheckIn && !lastCheckOut ? (
               <Text
@@ -610,150 +624,46 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* ── ROOMS ── */}
+      {/* ROOMS */}
       <RoomsSection />
 
-      {/* ── EVENTS ── */}
-      <View
-        style={{
-          paddingVertical: 30,
-          paddingHorizontal: 20,
-          backgroundColor: C.lavender,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 11,
-            fontWeight: "bold",
-            color: "#64748B",
-            letterSpacing: 2,
-            textTransform: "uppercase",
-            marginBottom: 4,
-          }}
-        >
-          What's Happening
-        </Text>
-        <Text
-          style={{
-            fontSize: 26,
-            fontWeight: "bold",
-            color: C.green,
-            marginBottom: 20,
-          }}
-        >
-          Upcoming Events
-        </Text>
-        {EVENTS.map((event) => (
-          <TouchableOpacity
-            key={event.id}
+      {/* JUNE / PROMOS */}
+      <View style={{ backgroundColor: C.lavender, paddingTop: 30 }}>
+        <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
+          <Text
             style={{
-              flexDirection: "row",
-              backgroundColor: C.white,
-              borderRadius: 16,
-              marginBottom: 14,
-              overflow: "hidden",
-              borderWidth: 1,
-              borderColor: "#E2E8F0",
+              fontSize: 11,
+              fontWeight: "800",
+              color: "#64748B",
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              marginBottom: 2,
             }}
           >
-            <View
-              style={{
-                backgroundColor: event.color,
-                width: 70,
-                alignItems: "center",
-                justifyContent: "center",
-                paddingVertical: 16,
-                gap: 4,
-              }}
-            >
-              <FontAwesome5
-                name={event.iconName}
-                size={16}
-                color="rgba(255,255,255,0.8)"
-              />
-              <Text
-                style={{ color: C.white, fontSize: 18, fontWeight: "bold" }}
-              >
-                {event.date.split(" ")[1]}
-              </Text>
-              <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 11 }}>
-                {event.date.split(" ")[0]}
-              </Text>
-              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 10 }}>
-                {event.day}
-              </Text>
-            </View>
-            <View style={{ flex: 1, padding: 14, justifyContent: "center" }}>
-              <View
-                style={{
-                  backgroundColor: event.color + "20",
-                  borderRadius: 6,
-                  paddingHorizontal: 8,
-                  paddingVertical: 2,
-                  alignSelf: "flex-start",
-                  marginBottom: 6,
-                }}
-              >
-                <Text
-                  style={{
-                    color: event.color,
-                    fontSize: 10,
-                    fontWeight: "bold",
-                    letterSpacing: 1,
-                  }}
-                >
-                  {event.tag.toUpperCase()}
-                </Text>
-              </View>
-              <Text
-                style={{ fontWeight: "bold", color: "#0F172A", fontSize: 15 }}
-              >
-                {event.title}
-              </Text>
-              <Text style={{ color: "#64748B", fontSize: 12, marginTop: 4 }}>
-                {event.description}
-              </Text>
-            </View>
-            <View style={{ justifyContent: "center", paddingRight: 14 }}>
-              <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* ── PROMOS ── */}
-      <View style={{ paddingVertical: 30, backgroundColor: C.offWhite }}>
-        <Text
-          style={{
-            textAlign: "center",
-            fontSize: 14,
-            color: "#4B5563",
-            letterSpacing: 2,
-            textTransform: "uppercase",
-            paddingHorizontal: 20,
-          }}
-        >
-          Exclusive for the Month of
-        </Text>
-        <Text
-          style={{
-            textAlign: "center",
-            fontSize: 48,
-            fontWeight: "900",
-            color: C.green,
-            letterSpacing: -1,
-            marginTop: -4,
-          }}
-        >
-          MAY
-        </Text>
+            What's On This Month
+          </Text>
+          <Text
+            style={{
+              fontSize: 52,
+              fontWeight: "900",
+              color: C.green,
+              letterSpacing: -2,
+              lineHeight: 56,
+            }}
+          >
+            JUNE
+          </Text>
+          <Text style={{ fontSize: 14, color: "#64748B", marginTop: 2 }}>
+            Events, promos and more at VS Hotel
+          </Text>
+        </View>
         <ScrollView
           ref={scrollRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={handlePromoScroll}
-          style={{ marginTop: 20 }}
+          style={{ marginBottom: 12 }}
         >
           {PROMOS.map((promo) => (
             <View
@@ -777,7 +687,7 @@ export default function HomeScreen() {
           style={{
             flexDirection: "row",
             justifyContent: "center",
-            marginTop: 16,
+            marginBottom: 30,
             gap: 8,
           }}
         >
@@ -795,13 +705,12 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* ── GUEST REVIEWS ── */}
+      {/* GUEST REVIEWS */}
       <View
         style={{
           paddingVertical: 30,
           paddingTop: 40,
           backgroundColor: C.green,
-          marginTop: 20,
         }}
       >
         <Text
@@ -841,7 +750,7 @@ export default function HomeScreen() {
             onPress={() =>
               Linking.openURL(
                 "https://www.tripadvisor.com/UserReviewEdit-g298574-d23833786-VS_Hotel-Quezon_City_Metro_Manila_Luzon.html",
-              )
+              ).catch(() => {})
             }
             style={{
               flex: 1,
@@ -862,14 +771,14 @@ export default function HomeScreen() {
                 textAlign: "center",
               }}
             >
-              HOW DID YOU{"\n"}ENJOY YOUR STAY?
+              {"HOW DID YOU\nENJOY YOUR STAY?"}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() =>
               Linking.openURL(
                 "https://us1.list-manage.com/survey?u=2dc85a100274ce1d29cb7076c&id=8f0146ae40&attribution=false",
-              )
+              ).catch(() => {})
             }
             style={{
               flex: 1,
@@ -890,7 +799,7 @@ export default function HomeScreen() {
                 textAlign: "center",
               }}
             >
-              HOW SHOULD{"\n"}WE IMPROVE?
+              {"HOW SHOULD\nWE IMPROVE?"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -904,50 +813,7 @@ export default function HomeScreen() {
             paddingBottom: 30,
           }}
         >
-          {[
-            {
-              name: "JUICE",
-              date: "March 04, 2026",
-              title: "First try staycation",
-              review:
-                "It was my first time to try go in on a staycation and VS hotel did not disappoint me. I was surprised that the room that I book was actually so large and I have it all for one night. I'll definitely go back.",
-            },
-            {
-              name: "MARC",
-              date: "March 09, 2026",
-              title: "Best Sleep this Year",
-              review:
-                "One of the best is my sleep as it gave me deep, serene and nice sleep during my stay. No insects roaming as well the facility is so clean.",
-            },
-            {
-              name: "MARILOU",
-              date: "March 16, 2026",
-              title: "Amazing stay in VS Hotel",
-              review:
-                "The Housekeeping supervisor is very helpful and has a very excellent customer service. The facility is very clean and smells good. It is really value for your money!",
-            },
-            {
-              name: "MYRA",
-              date: "March 18, 2026",
-              title: "Great Hotel!",
-              review:
-                "My son and daughter enjoy the bath tub. No one bother us and staff are courteous. Fast check in and check out. Over all I want to stay here again.",
-            },
-            {
-              name: "MARILYN",
-              date: "April 08, 2026",
-              title: "Worthwhile Stay",
-              review:
-                "Our family thoroughly enjoyed the amenities that VS Hotel offers. It was a wonderful experience that fostered family bonding and created special moments of togetherness for the kids.",
-            },
-            {
-              name: "GENALYNE",
-              date: "April 09, 2026",
-              title: "Exceptional",
-              review:
-                "The location was perfect for shopping, well maintained bathrooms. The staff were friendly and attentive, making the overall experience seamless. Great value for money.",
-            },
-          ].map((review, i) => (
+          {REVIEWS.map((review, i) => (
             <View
               key={i}
               style={{
@@ -1010,13 +876,6 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
       </View>
-
-      {/* ── MEMBERSHIP BANNER ── */}
-      <MembershipBanner
-        userName={userName}
-        userPoints={userPoints}
-        memberRank={memberRank}
-      />
 
       <View style={{ height: 20 }} />
     </ScrollView>

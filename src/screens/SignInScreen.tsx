@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -12,9 +12,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
 export default function SignInScreen() {
+  const { refreshProfile, setAppLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -25,22 +27,21 @@ export default function SignInScreen() {
       Alert.alert("Please fill in all fields.");
       return;
     }
-
     setLoading(true);
+    setAppLoading(true, "Logging you in...");
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
       if (error) throw error;
-
       if (data.user) {
-        Alert.alert("Welcome Back! 👋", "You have successfully logged in.", [
-          { text: "Continue", onPress: () => router.replace("/") },
-        ]);
+        await refreshProfile();
+        setAppLoading(false);
+        router.replace("/");
       }
     } catch (error: any) {
+      setAppLoading(false);
       Alert.alert("Log In Failed", error.message);
     } finally {
       setLoading(false);
@@ -57,7 +58,6 @@ export default function SignInScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
-          {/* Header */}
           <View
             style={{
               backgroundColor: "#1B4332",
@@ -67,7 +67,6 @@ export default function SignInScreen() {
               alignItems: "center",
             }}
           >
-            {/* Back button */}
             <TouchableOpacity
               onPress={() => router.back()}
               style={{
@@ -80,7 +79,6 @@ export default function SignInScreen() {
             >
               <Ionicons name="arrow-back" size={22} color="#86EFAC" />
             </TouchableOpacity>
-
             <Text style={{ color: "white", fontSize: 28, fontWeight: "bold" }}>
               Welcome Back
             </Text>
@@ -109,7 +107,6 @@ export default function SignInScreen() {
                 placeholderTextColor="#94A3B8"
               />
             </View>
-
             <View>
               <Text style={labelStyle}>PASSWORD</Text>
               <View style={{ position: "relative" }}>
@@ -247,7 +244,6 @@ const labelStyle: any = {
   marginBottom: 6,
   letterSpacing: 1,
 };
-
 const inputStyle: any = {
   borderWidth: 1,
   borderColor: "#E2E8F0",

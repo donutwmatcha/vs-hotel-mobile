@@ -1,8 +1,10 @@
+// src/screens/RequestScreen.tsx
 import {
   FontAwesome5,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -113,17 +115,30 @@ const Chip = ({
   label,
   selected,
   onPress,
+  disabled,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
+  disabled?: boolean;
 }) => (
   <TouchableOpacity
-    style={[styles.chip, selected && styles.chipSelected]}
+    style={[
+      styles.chip,
+      selected && styles.chipSelected,
+      disabled && styles.chipDisabled,
+    ]}
     onPress={onPress}
-    activeOpacity={0.8}
+    activeOpacity={disabled ? 1 : 0.8}
+    disabled={disabled}
   >
-    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+    <Text
+      style={[
+        styles.chipText,
+        selected && styles.chipTextSelected,
+        disabled && styles.chipTextDisabled,
+      ]}
+    >
       {label}
     </Text>
   </TouchableOpacity>
@@ -153,12 +168,11 @@ function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
 }
 
 export default function RequestScreen() {
-  const { user, profile, lastCheckOut } = useAuth();
+  const { user, profile, lastCheckIn, lastCheckOut } = useAuth();
   const [activeTab, setActiveTab] = useState<
     "request" | "feedback" | "history"
   >("request");
 
-  // Request state
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
   );
@@ -167,23 +181,21 @@ export default function RequestScreen() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Feedback state
   const [rating, setRating] = useState(0);
   const [commentText, setCommentText] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
 
-  // History state
   const [reviews, setReviews] = useState<Review[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-
-  // Check if user already reviewed this checkout
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+
+  // Logged in + currently checked in (has check-in but no check-out today)
+  const isCheckedIn = !!lastCheckIn && !lastCheckOut;
 
   useEffect(() => {
     if (activeTab === "history") fetchReviews();
   }, [activeTab]);
 
-  // Check if already reviewed after this checkout
   useEffect(() => {
     if (user && lastCheckOut) checkIfReviewed();
   }, [user, lastCheckOut]);
@@ -236,7 +248,6 @@ export default function RequestScreen() {
       Alert.alert("Missing Info", "Please enter your room number.");
       return;
     }
-
     setLoading(true);
     try {
       const { error } = await supabase.from("guest_requests").insert({
@@ -275,36 +286,33 @@ export default function RequestScreen() {
       );
       return;
     }
-
     setCommentLoading(true);
     try {
-      // Save to guest_feedback
-      const { error: fbError } = await supabase.from("guest_feedback").insert({
-        rating,
-        comment: commentText.trim(),
-        created_at: new Date().toISOString(),
-      });
-      if (fbError) throw fbError;
-
-      // Save to guest_reviews (with guest_id for history) and award 20 points
-      if (user && profile) {
-        await supabase.from("guest_reviews").insert({
-          guest_id: user.id,
+      const { error: fbError } = await supabase
+        .from("guest_feedback")
+        .insert({
           rating,
           comment: commentText.trim(),
-          points_awarded: 20,
           created_at: new Date().toISOString(),
         });
+      if (fbError) throw fbError;
+      if (user && profile) {
+        await supabase
+          .from("guest_reviews")
+          .insert({
+            guest_id: user.id,
+            rating,
+            comment: commentText.trim(),
+            points_awarded: 20,
+            created_at: new Date().toISOString(),
+          });
         await supabase
           .from("profiles")
-          .update({
-            points: (profile.points ?? 0) + 20,
-          })
+          .update({ points: (profile.points ?? 0) + 20 })
           .eq("id", user.id);
       }
-
       Alert.alert(
-        "Thank You! 🎉",
+        "Thank You! \uD83C\uDF89",
         "Your feedback helps us serve you better. You've earned +20 VS Points!",
         [
           {
@@ -332,7 +340,7 @@ export default function RequestScreen() {
         day: "numeric",
         year: "numeric",
       }) +
-      " • " +
+      " \u2022 " +
       d.toLocaleTimeString("en-PH", {
         hour: "2-digit",
         minute: "2-digit",
@@ -341,85 +349,145 @@ export default function RequestScreen() {
     );
   }
 
+  // ── NOT LOGGED IN ────────────────────────────────────────────────────────
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <StatusBar barStyle="light-content" backgroundColor={C.green} />
+        <View style={styles.headerBlock}>
+          <View style={styles.header}>
+            <Text style={styles.headerEyebrow}>How can we help?</Text>
+            <Text style={styles.headerTitle}>Requests & Feedback</Text>
+          </View>
+        </View>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: C.offWhite,
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 32,
+          }}
+        >
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: "#F1F5F9",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 20,
+            }}
+          >
+            <Ionicons name="lock-closed-outline" size={36} color={C.gray} />
+          </View>
+          <Text
+            style={{
+              fontSize: 22,
+              fontWeight: "900",
+              color: C.dark,
+              textAlign: "center",
+              marginBottom: 10,
+            }}
+          >
+            Sign In Required
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              color: C.gray,
+              textAlign: "center",
+              lineHeight: 22,
+              marginBottom: 28,
+            }}
+          >
+            You need to be a VS Hotel member to make requests and leave
+            feedback. Join for free to get started!
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/signin")}
+            style={{
+              backgroundColor: C.green,
+              paddingVertical: 14,
+              paddingHorizontal: 40,
+              borderRadius: 30,
+              marginBottom: 12,
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>
+              Sign In
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("/signup")}
+            style={{
+              borderWidth: 2,
+              borderColor: C.green,
+              paddingVertical: 14,
+              paddingHorizontal: 40,
+              borderRadius: 30,
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: C.green, fontWeight: "800", fontSize: 16 }}>
+              Join for Free
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── LOGGED IN ────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <StatusBar barStyle="light-content" backgroundColor={C.green} />
 
-      {/* ── Header ── */}
+      {/* Header */}
       <View style={styles.headerBlock}>
         <View style={styles.header}>
           <Text style={styles.headerEyebrow}>How can we help?</Text>
           <Text style={styles.headerTitle}>Requests & Feedback</Text>
         </View>
-
-        {/* 3 tabs */}
         <View style={styles.tabRow}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "request" && styles.tabActive]}
-            onPress={() => setActiveTab("request")}
-          >
-            <MaterialCommunityIcons
-              name="bell-ring-outline"
-              size={14}
-              color={
-                activeTab === "request" ? C.white : "rgba(255,255,255,0.6)"
-              }
-            />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "request" && styles.tabTextActive,
-              ]}
+          {(["request", "feedback", "history"] as const).map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.tab, activeTab === tab && styles.tabActive]}
+              onPress={() => setActiveTab(tab)}
             >
-              Request
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "feedback" && styles.tabActive]}
-            onPress={() => setActiveTab("feedback")}
-          >
-            <Ionicons
-              name="chatbubble-outline"
-              size={13}
-              color={
-                activeTab === "feedback" ? C.white : "rgba(255,255,255,0.6)"
-              }
-            />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "feedback" && styles.tabTextActive,
-              ]}
-            >
-              Feedback
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "history" && styles.tabActive]}
-            onPress={() => setActiveTab("history")}
-          >
-            <Ionicons
-              name="time-outline"
-              size={14}
-              color={
-                activeTab === "history" ? C.white : "rgba(255,255,255,0.6)"
-              }
-            />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "history" && styles.tabTextActive,
-              ]}
-            >
-              My Reviews
-            </Text>
-          </TouchableOpacity>
+              <Ionicons
+                name={
+                  tab === "request"
+                    ? "notifications-outline"
+                    : tab === "feedback"
+                      ? "chatbubble-ellipses-outline"
+                      : "time-outline"
+                }
+                size={14}
+                color={activeTab === tab ? C.white : "rgba(255,255,255,0.6)"}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === tab && styles.tabTextActive,
+                ]}
+              >
+                {tab === "request"
+                  ? "Request"
+                  : tab === "feedback"
+                    ? "Feedback"
+                    : "My Reviews"}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
-      {/* ── Content ── */}
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: C.offWhite }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -433,51 +501,133 @@ export default function RequestScreen() {
           {/* ── REQUEST TAB ── */}
           {activeTab === "request" && (
             <>
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Your Room Number</Text>
-                <View style={styles.inputRow}>
+              {/* Not checked in banner */}
+              {!isCheckedIn && (
+                <View
+                  style={{
+                    backgroundColor: "#FEF3C7",
+                    borderRadius: 14,
+                    padding: 16,
+                    marginBottom: 20,
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    gap: 12,
+                    borderWidth: 1,
+                    borderColor: "#FDE68A",
+                  }}
+                >
+                  <Ionicons
+                    name="information-circle"
+                    size={22}
+                    color="#B45309"
+                    style={{ marginTop: 1 }}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontWeight: "800",
+                        color: "#92400E",
+                        fontSize: 14,
+                        marginBottom: 4,
+                      }}
+                    >
+                      You're not currently checked in
+                    </Text>
+                    <Text
+                      style={{ color: "#B45309", fontSize: 13, lineHeight: 20 }}
+                    >
+                      Ask the staff at the front desk to scan your QR code found
+                      in your Profile tab to check you in. Requests are only
+                      available during your stay.
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Room Number — greyed out if not checked in */}
+              <View
+                style={[styles.section, !isCheckedIn && styles.sectionDisabled]}
+              >
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    !isCheckedIn && styles.labelDisabled,
+                  ]}
+                >
+                  Your Room Number
+                </Text>
+                <View
+                  style={[
+                    styles.inputRow,
+                    !isCheckedIn && styles.inputDisabled,
+                  ]}
+                >
                   <Ionicons
                     name="key-outline"
                     size={18}
-                    color={C.gray}
+                    color={isCheckedIn ? C.gray : C.grayLight}
                     style={styles.inputIcon}
                   />
                   <TextInput
-                    style={styles.inputWithIcon}
+                    style={[
+                      styles.inputWithIcon,
+                      !isCheckedIn && { color: C.grayLight },
+                    ]}
                     placeholder="e.g. 302"
-                    placeholderTextColor={C.gray}
+                    placeholderTextColor={isCheckedIn ? C.gray : C.grayLight}
                     value={roomNumber}
                     onChangeText={setRoomNumber}
                     keyboardType="number-pad"
+                    editable={isCheckedIn}
                   />
                 </View>
               </View>
 
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Request Type</Text>
+              {/* Category — greyed out if not checked in */}
+              <View
+                style={[styles.section, !isCheckedIn && styles.sectionDisabled]}
+              >
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    !isCheckedIn && styles.labelDisabled,
+                  ]}
+                >
+                  Request Type
+                </Text>
                 <View style={styles.categoryGrid}>
                   {CATEGORIES.map((cat) => {
-                    const isActive = selectedCategory?.id === cat.id;
+                    const isActive =
+                      selectedCategory?.id === cat.id && isCheckedIn;
                     return (
                       <TouchableOpacity
                         key={cat.id}
                         style={[
                           styles.categoryCard,
                           isActive && styles.categoryCardActive,
+                          !isCheckedIn && styles.categoryCardDisabled,
                         ]}
                         onPress={() => {
+                          if (!isCheckedIn) return;
                           setSelectedCategory(cat);
                           setSelectedOption(null);
                         }}
-                        activeOpacity={0.85}
+                        activeOpacity={isCheckedIn ? 0.85 : 1}
                       >
                         <View style={styles.categoryIconWrap}>
-                          {cat.icon(isActive ? C.green : C.gray)}
+                          {cat.icon(
+                            isCheckedIn
+                              ? isActive
+                                ? C.green
+                                : C.gray
+                              : C.grayLight,
+                          )}
                         </View>
                         <Text
                           style={[
                             styles.categoryLabel,
                             isActive && styles.categoryLabelActive,
+                            !isCheckedIn && styles.labelDisabled,
                           ]}
                         >
                           {cat.label}
@@ -488,7 +638,7 @@ export default function RequestScreen() {
                 </View>
               </View>
 
-              {selectedCategory && (
+              {selectedCategory && isCheckedIn && (
                 <View style={styles.section}>
                   <Text style={styles.sectionLabel}>
                     {selectedCategory.label} — Choose one
@@ -506,45 +656,77 @@ export default function RequestScreen() {
                 </View>
               )}
 
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>
+              {/* Notes — greyed out if not checked in */}
+              <View
+                style={[styles.section, !isCheckedIn && styles.sectionDisabled]}
+              >
+                <Text
+                  style={[
+                    styles.sectionLabel,
+                    !isCheckedIn && styles.labelDisabled,
+                  ]}
+                >
                   Additional Notes (optional)
                 </Text>
-                <View style={styles.inputRow}>
+                <View
+                  style={[
+                    styles.inputRow,
+                    !isCheckedIn && styles.inputDisabled,
+                  ]}
+                >
                   <Ionicons
                     name="pencil-outline"
                     size={18}
-                    color={C.gray}
+                    color={isCheckedIn ? C.gray : C.grayLight}
                     style={[
                       styles.inputIcon,
                       { alignSelf: "flex-start", marginTop: 14 },
                     ]}
                   />
                   <TextInput
-                    style={[styles.inputWithIcon, styles.textarea]}
+                    style={[
+                      styles.inputWithIcon,
+                      styles.textarea,
+                      !isCheckedIn && { color: C.grayLight },
+                    ]}
                     placeholder="Any specific details for our team..."
-                    placeholderTextColor={C.gray}
+                    placeholderTextColor={isCheckedIn ? C.gray : C.grayLight}
                     value={notes}
                     onChangeText={setNotes}
                     multiline
                     numberOfLines={3}
                     textAlignVertical="top"
+                    editable={isCheckedIn}
                   />
                 </View>
               </View>
 
               <TouchableOpacity
-                style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
-                onPress={handleSubmitRequest}
-                disabled={loading}
-                activeOpacity={0.9}
+                style={[
+                  styles.submitBtn,
+                  (!isCheckedIn || loading) && styles.submitBtnDisabled,
+                ]}
+                onPress={isCheckedIn ? handleSubmitRequest : undefined}
+                disabled={!isCheckedIn || loading}
+                activeOpacity={isCheckedIn ? 0.9 : 1}
               >
                 {loading ? (
                   <ActivityIndicator color={C.white} />
                 ) : (
                   <View style={styles.submitBtnInner}>
-                    <Ionicons name="send-outline" size={18} color={C.white} />
-                    <Text style={styles.submitBtnText}>Send Request</Text>
+                    <Ionicons
+                      name="send-outline"
+                      size={18}
+                      color={isCheckedIn ? C.white : C.grayLight}
+                    />
+                    <Text
+                      style={[
+                        styles.submitBtnText,
+                        !isCheckedIn && { color: C.grayLight },
+                      ]}
+                    >
+                      Send Request
+                    </Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -554,38 +736,7 @@ export default function RequestScreen() {
           {/* ── FEEDBACK TAB ── */}
           {activeTab === "feedback" && (
             <>
-              {/* Not logged in */}
-              {!user ? (
-                <View style={{ alignItems: "center", paddingVertical: 40 }}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={44}
-                    color={C.grayLight}
-                  />
-                  <Text
-                    style={{
-                      color: C.dark,
-                      fontSize: 15,
-                      marginTop: 12,
-                      fontWeight: "600",
-                      textAlign: "center",
-                    }}
-                  >
-                    Sign in to leave a review
-                  </Text>
-                  <Text
-                    style={{
-                      color: C.gray,
-                      fontSize: 13,
-                      marginTop: 6,
-                      textAlign: "center",
-                    }}
-                  >
-                    You need an account to submit feedback and earn VS Points.
-                  </Text>
-                </View>
-              ) : /* Not checked out yet */
-              !lastCheckOut ? (
+              {!lastCheckOut ? (
                 <View style={{ alignItems: "center", paddingVertical: 40 }}>
                   <Ionicons name="bed-outline" size={44} color={C.grayLight} />
                   <Text
@@ -611,8 +762,7 @@ export default function RequestScreen() {
                     the front desk.
                   </Text>
                 </View>
-              ) : /* Already reviewed this checkout */
-              alreadyReviewed ? (
+              ) : alreadyReviewed ? (
                 <View style={{ alignItems: "center", paddingVertical: 40 }}>
                   <Ionicons name="checkmark-circle" size={44} color={C.green} />
                   <Text
@@ -659,9 +809,7 @@ export default function RequestScreen() {
                   </TouchableOpacity>
                 </View>
               ) : (
-                /* Can review */
                 <>
-                  {/* Points hint */}
                   <View
                     style={{
                       backgroundColor: "#F0FDF4",
@@ -688,7 +836,6 @@ export default function RequestScreen() {
                       <Text style={{ fontWeight: "800" }}>+20 VS Points!</Text>
                     </Text>
                   </View>
-
                   <View style={styles.section}>
                     <Text style={styles.sectionLabel}>
                       How was your experience?
@@ -718,7 +865,6 @@ export default function RequestScreen() {
                       </Text>
                     )}
                   </View>
-
                   <View style={styles.section}>
                     <Text style={styles.sectionLabel}>Your Comments</Text>
                     <View style={styles.inputRow}>
@@ -733,7 +879,7 @@ export default function RequestScreen() {
                       />
                       <TextInput
                         style={[styles.inputWithIcon, styles.textareaLarge]}
-                        placeholder="Tell us about your stay — what you loved or how we can improve..."
+                        placeholder="Tell us about your stay..."
                         placeholderTextColor={C.gray}
                         value={commentText}
                         onChangeText={setCommentText}
@@ -743,7 +889,6 @@ export default function RequestScreen() {
                       />
                     </View>
                   </View>
-
                   <TouchableOpacity
                     style={[
                       styles.submitBtn,
@@ -776,25 +921,7 @@ export default function RequestScreen() {
           {/* ── HISTORY TAB ── */}
           {activeTab === "history" && (
             <>
-              {!user ? (
-                <View style={{ alignItems: "center", paddingVertical: 40 }}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={40}
-                    color={C.gray}
-                  />
-                  <Text
-                    style={{
-                      color: C.gray,
-                      fontSize: 15,
-                      marginTop: 12,
-                      textAlign: "center",
-                    }}
-                  >
-                    Sign in to see your review history
-                  </Text>
-                </View>
-              ) : historyLoading ? (
+              {historyLoading ? (
                 <View style={{ alignItems: "center", paddingVertical: 40 }}>
                   <ActivityIndicator color={C.green} size="large" />
                   <Text style={{ color: C.gray, marginTop: 12 }}>
@@ -954,7 +1081,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   headerEyebrow: {
     fontSize: 12,
-    color: C.goldLight,
+    color: "#D4A017",
     letterSpacing: 2,
     textTransform: "uppercase",
     fontWeight: "600",
@@ -962,7 +1089,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 26,
     fontWeight: "800",
-    color: C.white,
+    color: "#FFFFFF",
     marginTop: 2,
   },
   tabRow: { flexDirection: "row", paddingHorizontal: 20, gap: 8 },
@@ -971,26 +1098,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: C.greenLight,
+    backgroundColor: "#1a6b3c",
     alignItems: "center",
     justifyContent: "center",
     gap: 5,
   },
-  tabActive: { backgroundColor: C.gold },
+  tabActive: { backgroundColor: "#B8860B" },
   tabText: { fontSize: 11, fontWeight: "600", color: "rgba(255,255,255,0.7)" },
-  tabTextActive: { color: C.white },
+  tabTextActive: { color: "#FFFFFF" },
   scroll: {
     flex: 1,
-    backgroundColor: C.offWhite,
+    backgroundColor: "#F7F9F7",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
   },
   scrollContent: { paddingTop: 24, paddingHorizontal: 20 },
   section: { marginBottom: 24 },
+  sectionDisabled: { opacity: 1 },
+  labelDisabled: { color: "#A7C4B0" },
   sectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: C.dark,
+    color: "#111827",
     marginBottom: 10,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -998,75 +1127,93 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: C.white,
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: C.grayLight,
+    borderColor: "#E5E7EB",
   },
+  inputDisabled: { backgroundColor: "#EAF4EE", borderColor: "#C6E0CC" },
   inputIcon: { paddingLeft: 14 },
   inputWithIcon: {
     flex: 1,
     paddingHorizontal: 10,
     paddingVertical: 12,
     fontSize: 15,
-    color: C.dark,
+    color: "#111827",
   },
   textarea: { height: 80 },
   textareaLarge: { height: 140 },
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   categoryCard: {
     width: "47%",
-    backgroundColor: C.white,
+    backgroundColor: "#FFFFFF",
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 12,
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: C.grayLight,
+    borderColor: "#E5E7EB",
     shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
   },
-  categoryCardActive: { borderColor: C.green, backgroundColor: C.greenMint },
+  categoryCardActive: { borderColor: "#14532D", backgroundColor: "#EAF4EE" },
+  categoryCardDisabled: {
+    backgroundColor: "#EAF4EE",
+    borderColor: "#C6E0CC",
+    elevation: 0,
+    shadowOpacity: 0,
+  },
   categoryIconWrap: { marginBottom: 8 },
   categoryLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: C.gray,
+    color: "#6B7280",
     textAlign: "center",
   },
-  categoryLabelActive: { color: C.green },
+  categoryLabelActive: { color: "#14532D" },
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: C.white,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1.5,
-    borderColor: C.grayLight,
+    borderColor: "#E5E7EB",
   },
-  chipSelected: { backgroundColor: C.green, borderColor: C.green },
-  chipText: { fontSize: 13, color: C.gray, fontWeight: "500" },
-  chipTextSelected: { color: C.white, fontWeight: "700" },
+  chipSelected: { backgroundColor: "#14532D", borderColor: "#14532D" },
+  chipDisabled: { backgroundColor: "#EAF4EE", borderColor: "#C6E0CC" },
+  chipText: { fontSize: 13, color: "#6B7280", fontWeight: "500" },
+  chipTextSelected: { color: "#FFFFFF", fontWeight: "700" },
+  chipTextDisabled: { color: "#A7C4B0" },
   starsRow: { flexDirection: "row", gap: 8, marginBottom: 6 },
-  ratingLabel: { fontSize: 14, fontWeight: "700", color: C.gold, marginTop: 4 },
+  ratingLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#B8860B",
+    marginTop: 4,
+  },
   submitBtn: {
-    backgroundColor: C.green,
+    backgroundColor: "#14532D",
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 4,
-    shadowColor: C.green,
+    shadowColor: "#14532D",
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 10,
     elevation: 5,
   },
-  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnDisabled: {
+    backgroundColor: "#C6E0CC",
+    elevation: 0,
+    shadowOpacity: 0,
+  },
   submitBtnInner: { flexDirection: "row", alignItems: "center", gap: 8 },
   submitBtnText: {
-    color: C.white,
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
     letterSpacing: 0.5,

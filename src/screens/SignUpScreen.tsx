@@ -1,6 +1,6 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
 const G = "#14532D";
@@ -42,7 +43,6 @@ const YEARS = Array.from(
   (_, i) => new Date().getFullYear() - i,
 );
 
-// ─── Date Picker Modal ────────────────────────────────────────────────────────
 function DatePickerModal({
   visible,
   onClose,
@@ -107,7 +107,6 @@ function DatePickerModal({
           >
             Select Birthday
           </Text>
-
           <Text style={lbl}>MONTH</Text>
           <ScrollView
             horizontal
@@ -141,7 +140,6 @@ function DatePickerModal({
               ))}
             </View>
           </ScrollView>
-
           <Text style={lbl}>DAY</Text>
           <ScrollView
             horizontal
@@ -176,7 +174,6 @@ function DatePickerModal({
               ))}
             </View>
           </ScrollView>
-
           <Text style={lbl}>YEAR</Text>
           <ScrollView
             horizontal
@@ -209,7 +206,6 @@ function DatePickerModal({
               ))}
             </View>
           </ScrollView>
-
           <TouchableOpacity
             onPress={onConfirm}
             style={{
@@ -236,7 +232,6 @@ function DatePickerModal({
   );
 }
 
-// ─── Field Label with asterisk ────────────────────────────────────────────────
 function FieldLabel({ text, required }: { text: string; required?: boolean }) {
   return (
     <View style={{ flexDirection: "row", marginBottom: 6 }}>
@@ -252,7 +247,6 @@ function FieldLabel({ text, required }: { text: string; required?: boolean }) {
   );
 }
 
-// ─── Error message ────────────────────────────────────────────────────────────
 function FieldError({ msg }: { msg: string | null }) {
   if (!msg) return null;
   return (
@@ -270,8 +264,8 @@ function FieldError({ msg }: { msg: string | null }) {
   );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
 export default function SignUpScreen() {
+  const { refreshProfile, setAppLoading } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -282,8 +276,6 @@ export default function SignUpScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-
-  // Birthdate
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [birthMonth, setBirthMonth] = useState(1);
   const [birthDay, setBirthDay] = useState(1);
@@ -295,7 +287,6 @@ export default function SignUpScreen() {
     : null;
   const birthdateForDB = `${birthYear}-${String(birthMonth).padStart(2, "0")}-${String(birthDay).padStart(2, "0")}`;
 
-  // ─── Validation ─────────────────────────────────────────────────────────────
   const errors: Record<string, string | null> = {
     firstName: !firstName.trim()
       ? "First name is required."
@@ -337,17 +328,14 @@ export default function SignUpScreen() {
   function touch(field: string) {
     setTouched((prev) => ({ ...prev, [field]: true }));
   }
-
   function showError(field: string) {
     return touched[field] ? errors[field] : null;
   }
-
   function inputBorder(field: string) {
     return touched[field] && errors[field] ? RED : BORDER;
   }
 
   async function handleSignUp() {
-    // Touch all fields to show all errors
     const allFields = [
       "firstName",
       "lastName",
@@ -358,13 +346,12 @@ export default function SignUpScreen() {
       "confirmPassword",
     ];
     setTouched(Object.fromEntries(allFields.map((f) => [f, true])));
-
     if (hasErrors) {
       Alert.alert("Please fix the errors before continuing.");
       return;
     }
-
     setLoading(true);
+    setAppLoading(true, "Creating your account...");
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -380,17 +367,17 @@ export default function SignUpScreen() {
       });
       if (error) throw error;
       if (data.user) {
+        const randomAvatarId = Math.floor(Math.random() * 10) + 1;
         await supabase
           .from("profiles")
-          .update({ birthdate: birthdateForDB })
+          .update({ birthdate: birthdateForDB, avatar_id: randomAvatarId })
           .eq("id", data.user.id);
-        Alert.alert(
-          "Welcome to VS Hotel! 🎉",
-          "Your account has been created.",
-          [{ text: "Continue", onPress: () => router.replace("/") }],
-        );
+        await refreshProfile();
+        setAppLoading(false);
+        router.replace("/");
       }
     } catch (error: any) {
+      setAppLoading(false);
       Alert.alert("Sign Up Failed", error.message);
     } finally {
       setLoading(false);
@@ -407,7 +394,6 @@ export default function SignUpScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView style={{ flex: 1, backgroundColor: "#fff" }}>
-          {/* Header */}
           <View
             style={{
               backgroundColor: "#1B4332",
@@ -445,7 +431,6 @@ export default function SignUpScreen() {
             </View>
           </View>
 
-          {/* Benefits card */}
           <View
             style={{
               backgroundColor: "#F0EEF5",
@@ -493,7 +478,6 @@ export default function SignUpScreen() {
           </View>
 
           <View style={{ paddingHorizontal: 20, gap: 16 }}>
-            {/* Name row */}
             <View style={{ flexDirection: "row", gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <FieldLabel text="FIRST NAME" required />
@@ -521,7 +505,6 @@ export default function SignUpScreen() {
               </View>
             </View>
 
-            {/* Email */}
             <View>
               <FieldLabel text="EMAIL ADDRESS" required />
               <TextInput
@@ -537,7 +520,6 @@ export default function SignUpScreen() {
               <FieldError msg={showError("email")} />
             </View>
 
-            {/* Phone */}
             <View>
               <FieldLabel text="PHONE NUMBER" required />
               <TextInput
@@ -564,12 +546,10 @@ export default function SignUpScreen() {
               </View>
             </View>
 
-            {/* Birthday */}
             <View>
               <FieldLabel text="BIRTHDAY" required />
               <TouchableOpacity
                 onPress={() => setShowDatePicker(true)}
-                onBlur={() => touch("birthdate")}
                 style={[
                   inp,
                   {
@@ -604,7 +584,6 @@ export default function SignUpScreen() {
               />
             </View>
 
-            {/* Password */}
             <View>
               <FieldLabel text="PASSWORD" required />
               <View style={{ position: "relative" }}>
@@ -649,7 +628,6 @@ export default function SignUpScreen() {
               </View>
             </View>
 
-            {/* Confirm Password */}
             <View>
               <FieldLabel text="CONFIRM PASSWORD" required />
               <View style={{ position: "relative" }}>
@@ -679,7 +657,6 @@ export default function SignUpScreen() {
                 </TouchableOpacity>
               </View>
               <FieldError msg={showError("confirmPassword")} />
-              {/* Password match indicator */}
               {confirmPassword.length > 0 && (
                 <View
                   style={{
@@ -713,7 +690,6 @@ export default function SignUpScreen() {
               )}
             </View>
 
-            {/* Submit */}
             <TouchableOpacity
               onPress={handleSignUp}
               disabled={loading}

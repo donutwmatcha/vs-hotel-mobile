@@ -4,9 +4,10 @@ import {
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
+import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -55,14 +56,16 @@ const MONTHS = [
 ];
 
 const PRESET_AVATARS = [
-  { id: 1, source: require("../assets/avatars/avatar1.jpg") },
-  { id: 2, source: require("../assets/avatars/avatar2.jpg") },
-  { id: 3, source: require("../assets/avatars/avatar3.jpg") },
-  { id: 4, source: require("../assets/avatars/avatar4.jpg") },
-  { id: 5, source: require("../assets/avatars/avatar5.jpg") },
-  { id: 6, source: require("../assets/avatars/avatar6.jpg") },
-  { id: 7, source: require("../assets/avatars/avatar7.jpg") },
-  { id: 8, source: require("../assets/avatars/avatar8.jpg") },
+  { id: 1, source: require("../assets/avatars/donutwmatcha-avatar-1.jpg") },
+  { id: 2, source: require("../assets/avatars/donutwmatcha-avatar-2.jpg") },
+  { id: 3, source: require("../assets/avatars/donutwmatcha-avatar-3.jpg") },
+  { id: 4, source: require("../assets/avatars/donutwmatcha-avatar-4.jpg") },
+  { id: 5, source: require("../assets/avatars/donutwmatcha-avatar-5.jpg") },
+  { id: 6, source: require("../assets/avatars/donutwmatcha-avatar-6.jpg") },
+  { id: 7, source: require("../assets/avatars/donutwmatcha-avatar-7.jpg") },
+  { id: 8, source: require("../assets/avatars/donutwmatcha-avatar-8.jpg") },
+  { id: 9, source: require("../assets/avatars/donutwmatcha-avatar-9.jpg") },
+  { id: 10, source: require("../assets/avatars/donutwmatcha-avatar-10.jpg") },
 ];
 
 const TIERS = [
@@ -201,7 +204,15 @@ const CONFETTI_COLORS = [
   "#FDE68A",
   "#F9A8D4",
 ];
-const EMOJIS = ["🎂", "🎉", "🎈", "🎊", "✨", "🌟", "💛"];
+const EMOJIS = [
+  "\uD83C\uDF82",
+  "\uD83C\uDF89",
+  "\uD83C\uDF88",
+  "\uD83C\uDF8A",
+  "\u2728",
+  "\uD83C\uDF1F",
+  "\uD83D\uDC9B",
+];
 
 function ConfettiPiece({ delay }: { delay: number }) {
   const y = useRef(new Animated.Value(-20)).current;
@@ -210,7 +221,6 @@ function ConfettiPiece({ delay }: { delay: number }) {
   const color =
     CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
   const size = 8 + Math.random() * 8;
-
   useEffect(() => {
     const anim = Animated.loop(
       Animated.parallel([
@@ -231,7 +241,6 @@ function ConfettiPiece({ delay }: { delay: number }) {
     anim.start();
     return () => anim.stop();
   }, []);
-
   return (
     <Animated.View
       style={{
@@ -260,7 +269,6 @@ function ConfettiPiece({ delay }: { delay: number }) {
 function BalloonEmoji({ emoji, delay }: { emoji: string; delay: number }) {
   const y = useRef(new Animated.Value(SH)).current;
   const xPos = useRef(Math.random() * (SW - 40)).current;
-
   useEffect(() => {
     Animated.timing(y, {
       toValue: -100,
@@ -269,7 +277,6 @@ function BalloonEmoji({ emoji, delay }: { emoji: string; delay: number }) {
       useNativeDriver: true,
     }).start();
   }, []);
-
   return (
     <Animated.Text
       style={{
@@ -287,11 +294,7 @@ function BalloonEmoji({ emoji, delay }: { emoji: string; delay: number }) {
 
 function BirthdayOverlay({ name }: { name: string }) {
   const [visible, setVisible] = useState(true);
-  const confettiPieces = Array.from({ length: 30 });
-  const balloons = Array.from({ length: 8 });
-
   if (!visible) return null;
-
   return (
     <View
       style={{
@@ -301,10 +304,10 @@ function BirthdayOverlay({ name }: { name: string }) {
         zIndex: 999,
       }}
     >
-      {confettiPieces.map((_, i) => (
+      {Array.from({ length: 30 }).map((_, i) => (
         <ConfettiPiece key={i} delay={i * 80} />
       ))}
-      {balloons.map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <BalloonEmoji
           key={i}
           emoji={EMOJIS[i % EMOJIS.length]}
@@ -335,7 +338,6 @@ function AvatarPickerModal({
   useEffect(() => {
     if (visible) setSelected(currentAvatarId);
   }, [visible, currentAvatarId]);
-
   return (
     <Modal
       transparent
@@ -382,7 +384,6 @@ function AvatarPickerModal({
           <Text style={{ fontSize: 13, color: C.gray, marginBottom: 20 }}>
             Pick a preset or upload your own photo
           </Text>
-
           <TouchableOpacity
             onPress={onUploadCustom}
             style={{
@@ -419,7 +420,6 @@ function AvatarPickerModal({
             </View>
             <Ionicons name="chevron-forward" size={16} color={C.gray} />
           </TouchableOpacity>
-
           <View
             style={{
               flexDirection: "row",
@@ -438,7 +438,6 @@ function AvatarPickerModal({
               style={{ flex: 1, height: 1, backgroundColor: C.grayLight }}
             />
           </View>
-
           <View
             style={{
               flexDirection: "row",
@@ -485,7 +484,6 @@ function AvatarPickerModal({
               </TouchableOpacity>
             ))}
           </View>
-
           <TouchableOpacity
             onPress={() => {
               if (selected) onSelectPreset(selected);
@@ -541,7 +539,6 @@ function PersonalInfoModal({
   const [lastName, setLastName] = useState(profile?.last_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
   const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     if (visible) {
       setFirstName(profile?.first_name ?? "");
@@ -549,17 +546,12 @@ function PersonalInfoModal({
       setPhone(profile?.phone ?? "");
     }
   }, [visible, profile]);
-
-  // Format birthday display (no year)
   const birthdayDisplay = profile?.birthdate
     ? (() => {
-        const parts = profile.birthdate.split("-");
-        const m = parseInt(parts[1]) - 1;
-        const d = parseInt(parts[2]);
-        return `${MONTHS[m]} ${d}`;
+        const p = profile.birthdate.split("-");
+        return `${MONTHS[parseInt(p[1]) - 1]} ${parseInt(p[2])}`;
       })()
     : null;
-
   async function handleSave() {
     if (!firstName.trim() || !lastName.trim()) {
       Alert.alert("Missing Info", "First and last name are required.");
@@ -576,7 +568,7 @@ function PersonalInfoModal({
         })
         .eq("id", profile.id);
       if (error) throw error;
-      Alert.alert("Saved! ✅", "Your profile has been updated.", [
+      Alert.alert("Saved! \u2705", "Your profile has been updated.", [
         {
           text: "OK",
           onPress: () => {
@@ -591,7 +583,6 @@ function PersonalInfoModal({
       setLoading(false);
     }
   }
-
   return (
     <Modal
       transparent
@@ -638,7 +629,6 @@ function PersonalInfoModal({
           <Text style={{ fontSize: 13, color: C.gray, marginBottom: 24 }}>
             Update your profile details
           </Text>
-
           <Text style={labelStyle}>FIRST NAME</Text>
           <TextInput
             style={inputStyle}
@@ -647,7 +637,6 @@ function PersonalInfoModal({
             placeholder="Juan"
             placeholderTextColor={C.gray}
           />
-
           <Text style={[labelStyle, { marginTop: 14 }]}>LAST NAME</Text>
           <TextInput
             style={inputStyle}
@@ -656,7 +645,6 @@ function PersonalInfoModal({
             placeholder="Dela Cruz"
             placeholderTextColor={C.gray}
           />
-
           <Text style={[labelStyle, { marginTop: 14 }]}>EMAIL</Text>
           <View
             style={[
@@ -678,7 +666,6 @@ function PersonalInfoModal({
           >
             Email cannot be changed here.
           </Text>
-
           <Text style={labelStyle}>PHONE NUMBER</Text>
           <TextInput
             style={inputStyle}
@@ -688,7 +675,6 @@ function PersonalInfoModal({
             keyboardType="phone-pad"
             placeholderTextColor={C.gray}
           />
-
           {birthdayDisplay && (
             <>
               <Text style={[labelStyle, { marginTop: 14 }]}>BIRTHDAY</Text>
@@ -710,7 +696,6 @@ function PersonalInfoModal({
               </View>
             </>
           )}
-
           <TouchableOpacity
             onPress={handleSave}
             disabled={loading}
@@ -821,10 +806,10 @@ function AvatarDisplay({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ProfileScreen() {
-  const { user, profile, signOut, refreshProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"points" | "rewards" | "tiers">(
-    "points",
-  );
+  const { user, profile, signOut, refreshProfile, setAppLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState<
+    "points" | "rewards" | "history" | "tiers"
+  >("points");
   const [avatarId, setAvatarId] = useState<number | null>(
     profile?.avatar_id ?? null,
   );
@@ -839,8 +824,9 @@ export default function ProfileScreen() {
   );
   const [savingEmail, setSavingEmail] = useState(false);
   const [birthdayBonusAwarded, setBirthdayBonusAwarded] = useState(false);
+  const [redemptionHistory, setRedemptionHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // Check if today is the user's birthday
   const isBirthday = (() => {
     if (!profile?.birthdate) return false;
     const today = new Date();
@@ -853,20 +839,22 @@ export default function ProfileScreen() {
 
   const birthdayDisplay = profile?.birthdate
     ? (() => {
-        const parts = profile.birthdate.split("-");
-        return `${MONTHS[parseInt(parts[1]) - 1]} ${parseInt(parts[2])}`;
+        const p = profile.birthdate.split("-");
+        return `${MONTHS[parseInt(p[1]) - 1]} ${parseInt(p[2])}`;
       })()
     : null;
 
+  // Use lifetime_points for tier/progress, points for spendable balance
+  const lifetimePoints = profile?.lifetime_points ?? profile?.points ?? 0;
+  const spendablePoints = profile?.points ?? 0;
+
   const currentTier =
     TIERS.find(
-      (t) =>
-        (profile?.points ?? 0) >= t.minPoints &&
-        (profile?.points ?? 0) <= t.maxPoints,
+      (t) => lifetimePoints >= t.minPoints && lifetimePoints <= t.maxPoints,
     ) || TIERS[0];
   const nextTier = TIERS[TIERS.indexOf(currentTier) + 1];
   const progressToNext = nextTier
-    ? (((profile?.points ?? 0) - currentTier.minPoints) /
+    ? ((lifetimePoints - currentTier.minPoints) /
         (nextTier.minPoints - currentTier.minPoints)) *
       100
     : 100;
@@ -879,15 +867,40 @@ export default function ProfileScreen() {
     }
   }, [profile]);
 
-  // Award birthday bonus once per year
   useEffect(() => {
     if (isBirthday && profile && !birthdayBonusAwarded) {
       const currentYear = new Date().getFullYear();
-      if (profile.birthday_bonus_year !== currentYear) {
-        awardBirthdayBonus();
-      }
+      if (profile.birthday_bonus_year !== currentYear) awardBirthdayBonus();
     }
   }, [isBirthday, profile]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshProfile();
+    }, []),
+  );
+
+  async function fetchRedemptionHistory() {
+    if (!user) return;
+    setLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from("reward_redemptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("redeemed_at", { ascending: false });
+      if (error) throw error;
+      setRedemptionHistory(data ?? []);
+    } catch (err) {
+      console.log("History fetch error:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === "history") fetchRedemptionHistory();
+  }, [activeTab]);
 
   async function awardBirthdayBonus() {
     if (!user || !profile) return;
@@ -897,13 +910,15 @@ export default function ProfileScreen() {
         .from("profiles")
         .update({
           points: (profile.points ?? 0) + 200,
+          lifetime_points:
+            (profile.lifetime_points ?? profile.points ?? 0) + 200,
           birthday_bonus_year: currentYear,
         })
         .eq("id", user.id);
       setBirthdayBonusAwarded(true);
       await refreshProfile();
       Alert.alert(
-        "🎂 Happy Birthday!",
+        "\uD83C\uDF82 Happy Birthday!",
         `${profile.first_name}, you've received 200 bonus VS Points! Enjoy your special day!`,
       );
     } catch (err) {
@@ -911,11 +926,45 @@ export default function ProfileScreen() {
     }
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      refreshProfile();
-    }, []),
-  );
+  async function handleRedeemReward(reward: (typeof REWARDS)[0]) {
+    if (!user || !profile) return;
+    if (spendablePoints < reward.points) return;
+    Alert.alert(
+      "Redeem Reward",
+      `Redeem ${reward.name} for ${reward.points} points?\n\nYou currently have ${spendablePoints} points. After redemption you'll have ${spendablePoints - reward.points} points.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Redeem",
+          onPress: async () => {
+            try {
+              const newPoints = spendablePoints - reward.points;
+              const { error: updateError } = await supabase
+                .from("profiles")
+                .update({ points: newPoints })
+                .eq("id", user.id);
+              if (updateError) throw updateError;
+              const { error: historyError } = await supabase
+                .from("reward_redemptions")
+                .insert({
+                  user_id: user.id,
+                  reward_name: reward.name,
+                  points_cost: reward.points,
+                });
+              if (historyError) throw historyError;
+              await refreshProfile();
+              Alert.alert(
+                "Redeemed! \uD83C\uDF89",
+                `Your ${reward.name} reward has been requested.\n\nRemaining points: ${newPoints}\nOur team will be in touch shortly.`,
+              );
+            } catch (err: any) {
+              Alert.alert("Error", err.message || "Could not redeem reward.");
+            }
+          },
+        },
+      ],
+    );
+  }
 
   async function handleSavePresetAvatar(id: number) {
     setSavingAvatar(true);
@@ -945,7 +994,7 @@ export default function ProfileScreen() {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
@@ -956,12 +1005,13 @@ export default function ProfileScreen() {
     try {
       const uri = result.assets[0].uri;
       const fileName = `${user!.id}/avatar.jpg`;
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const arrayBuffer = await new Response(blob).arrayBuffer();
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const byteArray = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(fileName, arrayBuffer, {
+        .upload(fileName, byteArray, {
           contentType: "image/jpeg",
           upsert: true,
         });
@@ -1007,10 +1057,23 @@ export default function ProfileScreen() {
         text: "Sign Out",
         style: "destructive",
         onPress: async () => {
+          setAppLoading(true, "Signing out...");
           await signOut();
+          setAppLoading(false);
         },
       },
     ]);
+  }
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString("en-PH", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   }
 
   // ── NOT LOGGED IN ────────────────────────────────────────────────────────
@@ -1116,7 +1179,6 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
-
           <View style={{ padding: 20 }}>
             <Text
               style={{
@@ -1169,7 +1231,6 @@ export default function ProfileScreen() {
               </View>
             ))}
           </View>
-
           <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
             <Text
               style={{
@@ -1231,7 +1292,6 @@ export default function ProfileScreen() {
               </View>
             ))}
           </View>
-
           <View
             style={{
               margin: 20,
@@ -1302,7 +1362,6 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-
           <TouchableOpacity
             onPress={() => router.push("/signin")}
             style={{
@@ -1394,7 +1453,7 @@ export default function ProfileScreen() {
                 }}
               >
                 {isBirthday
-                  ? `🎂 Happy Birthday,\n${profile.first_name}!`
+                  ? `\uD83C\uDF82 Happy Birthday,\n${profile.first_name}!`
                   : `Welcome back,\n${profile.first_name}!`}
               </Text>
               <Text style={{ color: "#86EFAC", fontSize: 13, marginTop: 4 }}>
@@ -1422,12 +1481,11 @@ export default function ProfileScreen() {
                     }}
                   >
                     {birthdayDisplay}
-                    {isBirthday ? " — Today! 🎉" : ""}
+                    {isBirthday ? " \u2014 Today! \uD83C\uDF89" : ""}
                   </Text>
                 </View>
               )}
             </View>
-
             {savingAvatar ? (
               <View
                 style={{
@@ -1452,15 +1510,16 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Stats */}
+        {/* Member Card */}
         <MemberCard
           userId={user.id}
           userName={`${profile.first_name} ${profile.last_name}`}
           memberRank={currentTier.name + " Member"}
-          points={profile.points}
+          points={spendablePoints}
           memberNumber={profile.member_number}
         />
 
+        {/* Stats */}
         <View
           style={{
             flexDirection: "row",
@@ -1477,7 +1536,7 @@ export default function ProfileScreen() {
         >
           <View style={{ flex: 1, alignItems: "center" }}>
             <Text style={{ fontSize: 24, fontWeight: "bold", color: C.green }}>
-              {profile.points.toLocaleString()}
+              {spendablePoints.toLocaleString()}
             </Text>
             <Text style={{ color: C.gray, fontSize: 12, marginTop: 2 }}>
               VS Points
@@ -1509,7 +1568,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Progress */}
+        {/* Progress bar — uses lifetime_points */}
         {nextTier && (
           <View
             style={{
@@ -1531,7 +1590,7 @@ export default function ProfileScreen() {
                 Progress to {nextTier.name}
               </Text>
               <Text style={{ color: C.gray, fontSize: 13 }}>
-                {profile.points}/{nextTier.minPoints} pts
+                {lifetimePoints}/{nextTier.minPoints} pts
               </Text>
             </View>
             <View
@@ -1552,8 +1611,12 @@ export default function ProfileScreen() {
               />
             </View>
             <Text style={{ color: C.gray, fontSize: 12, marginTop: 6 }}>
-              {nextTier.minPoints - profile.points} more points to reach{" "}
+              {nextTier.minPoints - lifetimePoints} more points to reach{" "}
               {nextTier.name}
+            </Text>
+            <Text style={{ color: "#94A3B8", fontSize: 11, marginTop: 2 }}>
+              Based on lifetime earned points — redemptions don't affect your
+              tier progress.
             </Text>
           </View>
         )}
@@ -1569,7 +1632,7 @@ export default function ProfileScreen() {
             padding: 4,
           }}
         >
-          {(["points", "rewards", "tiers"] as const).map((tab) => (
+          {(["points", "rewards", "history", "tiers"] as const).map((tab) => (
             <TouchableOpacity
               key={tab}
               onPress={() => setActiveTab(tab)}
@@ -1586,14 +1649,16 @@ export default function ProfileScreen() {
                 style={{
                   color: activeTab === tab ? C.green : C.gray,
                   fontWeight: "bold",
-                  fontSize: 12,
+                  fontSize: 11,
                 }}
               >
                 {tab === "points"
-                  ? "How to Earn"
+                  ? "Earn"
                   : tab === "rewards"
-                    ? "Rewards"
-                    : "Tier Perks"}
+                    ? "Redeem"
+                    : tab === "history"
+                      ? "History"
+                      : "Tiers"}
               </Text>
             </TouchableOpacity>
           ))}
@@ -1601,6 +1666,7 @@ export default function ProfileScreen() {
 
         {/* Tab Content */}
         <View style={{ marginHorizontal: 20, marginTop: 16 }}>
+          {/* HOW TO EARN */}
           {activeTab === "points" && (
             <View style={{ gap: 10 }}>
               {EARN_ITEMS.map((item, i) => {
@@ -1654,17 +1720,18 @@ export default function ProfileScreen() {
             </View>
           )}
 
+          {/* REWARDS */}
           {activeTab === "rewards" && (
             <View style={{ gap: 10 }}>
               <Text style={{ color: C.gray, fontSize: 13, marginBottom: 6 }}>
                 You have{" "}
                 <Text style={{ color: C.green, fontWeight: "bold" }}>
-                  {profile.points.toLocaleString()} points
+                  {spendablePoints.toLocaleString()} points
                 </Text>{" "}
                 to spend
               </Text>
               {REWARDS.map((reward) => {
-                const canRedeem = profile.points >= reward.points;
+                const canRedeem = spendablePoints >= reward.points;
                 return (
                   <View
                     key={reward.id}
@@ -1700,23 +1767,7 @@ export default function ProfileScreen() {
                         borderRadius: 20,
                       }}
                       disabled={!canRedeem}
-                      onPress={() =>
-                        Alert.alert(
-                          "Redeem Reward",
-                          `Redeem ${reward.name} for ${reward.points} points?`,
-                          [
-                            { text: "Cancel", style: "cancel" },
-                            {
-                              text: "Redeem",
-                              onPress: () =>
-                                Alert.alert(
-                                  "Success! 🎉",
-                                  `Your ${reward.name} reward has been requested. Our team will be in touch shortly.`,
-                                ),
-                            },
-                          ],
-                        )
-                      }
+                      onPress={() => handleRedeemReward(reward)}
                     >
                       <Text
                         style={{
@@ -1734,6 +1785,99 @@ export default function ProfileScreen() {
             </View>
           )}
 
+          {/* HISTORY */}
+          {activeTab === "history" && (
+            <View style={{ gap: 10 }}>
+              <Text style={{ color: C.gray, fontSize: 13, marginBottom: 6 }}>
+                Your redeemed rewards
+              </Text>
+              {loadingHistory ? (
+                <ActivityIndicator color={C.green} style={{ marginTop: 20 }} />
+              ) : redemptionHistory.length === 0 ? (
+                <View
+                  style={{
+                    backgroundColor: C.white,
+                    borderRadius: 16,
+                    padding: 32,
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <FontAwesome5 name="gift" size={36} color="#CBD5E1" />
+                  <Text
+                    style={{ color: C.gray, fontSize: 14, textAlign: "center" }}
+                  >
+                    No rewards redeemed yet.{"\n"}Start redeeming to see your
+                    history here!
+                  </Text>
+                </View>
+              ) : (
+                redemptionHistory.map((item, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      backgroundColor: C.white,
+                      borderRadius: 12,
+                      padding: 16,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 12,
+                      elevation: 2,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: "#F0FDF4",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <FontAwesome5 name="gift" size={18} color={C.green} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontWeight: "bold",
+                          color: C.dark,
+                          fontSize: 14,
+                        }}
+                      >
+                        {item.reward_name}
+                      </Text>
+                      <Text
+                        style={{ color: C.gray, fontSize: 12, marginTop: 2 }}
+                      >
+                        {formatDate(item.redeemed_at)}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        backgroundColor: "#FEF3C7",
+                        borderRadius: 10,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#B45309",
+                          fontWeight: "800",
+                          fontSize: 13,
+                        }}
+                      >
+                        -{item.points_cost} pts
+                      </Text>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          )}
+
+          {/* TIERS */}
           {activeTab === "tiers" && (
             <View style={{ gap: 12 }}>
               {TIERS.map((tier, i) => {
@@ -1801,7 +1945,7 @@ export default function ProfileScreen() {
                     >
                       {tier.minPoints.toLocaleString()} –{" "}
                       {tier.maxPoints === 999999
-                        ? "∞"
+                        ? "\u221E"
                         : tier.maxPoints.toLocaleString()}{" "}
                       points
                     </Text>
@@ -1914,7 +2058,6 @@ export default function ProfileScreen() {
           >
             Account
           </Text>
-
           <TouchableOpacity
             onPress={() => setShowPersonalInfo(true)}
             style={{
@@ -1934,7 +2077,6 @@ export default function ProfileScreen() {
             </Text>
             <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
           </TouchableOpacity>
-
           <TouchableOpacity
             onPress={() => setActiveTab("tiers")}
             style={{
@@ -1954,7 +2096,6 @@ export default function ProfileScreen() {
             </Text>
             <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
           </TouchableOpacity>
-
           <View
             style={{
               flexDirection: "row",
@@ -1986,7 +2127,6 @@ export default function ProfileScreen() {
               thumbColor={C.white}
             />
           </View>
-
           <TouchableOpacity
             onPress={handleSignOut}
             style={{
@@ -2015,7 +2155,6 @@ export default function ProfileScreen() {
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* Confetti overlay on birthday */}
       {isBirthday && <BirthdayOverlay name={profile.first_name} />}
 
       <AvatarPickerModal

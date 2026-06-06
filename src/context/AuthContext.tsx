@@ -18,6 +18,8 @@ interface Profile {
   birthdate: string | null;
   birthday_bonus_year: number | null;
   member_number: number | null;
+  lifetime_points: number | null;
+  redeemed_points: number | null;
 }
 
 interface CheckInRecord {
@@ -36,6 +38,8 @@ interface AuthContextType {
   lastCheckOut: CheckInRecord | null;
   currentRoom: CheckInRecord | null;
   loading: boolean;
+  loadingMessage: string | null;
+  setAppLoading: (loading: boolean, message?: string) => void;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -47,6 +51,8 @@ const AuthContext = createContext<AuthContextType>({
   lastCheckOut: null,
   currentRoom: null,
   loading: true,
+  loadingMessage: null,
+  setAppLoading: () => {},
   signOut: async () => {},
   refreshProfile: async () => {},
 });
@@ -58,6 +64,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [lastCheckOut, setLastCheckOut] = useState<CheckInRecord | null>(null);
   const [currentRoom, setCurrentRoom] = useState<CheckInRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
+
+  function setAppLoading(isLoading: boolean, message?: string) {
+    setLoading(isLoading);
+    setLoadingMessage(message ?? null);
+  }
 
   async function fetchProfile(userId: string) {
     const { data, error } = await supabase
@@ -69,7 +81,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Fetch today's latest check-in
     const { data: ci } = await supabase
       .from("check_ins")
       .select("*")
@@ -81,7 +92,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .maybeSingle();
     setLastCheckIn(ci ?? null);
 
-    // Fetch today's latest check-out
     const { data: co } = await supabase
       .from("check_ins")
       .select("*")
@@ -93,7 +103,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .maybeSingle();
     setLastCheckOut(co ?? null);
 
-    // Current room = most recent check-in that has room info and no checkout after it
     if (ci && ci.room_type && !co) {
       setCurrentRoom(ci);
     } else {
@@ -125,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCurrentRoom(null);
       }
       setLoading(false);
+      setLoadingMessage(null);
     });
 
     const handleAppState = (nextState: AppStateStatus) => {
@@ -149,6 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLastCheckIn(null);
     setLastCheckOut(null);
     setCurrentRoom(null);
+    setLoadingMessage(null);
   }
 
   return (
@@ -160,6 +171,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         lastCheckOut,
         currentRoom,
         loading,
+        loadingMessage,
+        setAppLoading,
         signOut,
         refreshProfile,
       }}

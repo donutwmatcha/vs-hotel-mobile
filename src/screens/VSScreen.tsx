@@ -1,4 +1,3 @@
-// src/screens/VSScreen.tsx
 import {
   FontAwesome5,
   Ionicons,
@@ -40,6 +39,47 @@ const C = {
   dark: "#0D1B12",
 };
 
+// ─── Cinema Data ──────────────────────────────────────────────────────────────
+type CinemaMovie = { id: string; title: string; image: { uri: string } };
+
+const CINEMA_MOVIES: CinemaMovie[] = [
+  {
+    id: "backrooms",
+    title: "Backrooms",
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780474537/backrooms_jtusvb.jpg",
+    },
+  },
+  {
+    id: "love-ngo",
+    title: "Love Ngo",
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780474538/love-ngo_tlbgfv.jpg",
+    },
+  },
+  {
+    id: "colony",
+    title: "Colony",
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780474538/colony_xfzydm.jpg",
+    },
+  },
+  {
+    id: "passenger",
+    title: "Passenger",
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780474540/passenger_gcjyx9.jpg",
+    },
+  },
+  {
+    id: "masters",
+    title: "Masters of the Universe",
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1780474542/masters-of-the-universe_snpimn.jpg",
+    },
+  },
+];
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 type CarouselItem = {
   id: string;
@@ -69,7 +109,7 @@ type RetailCategory = {
   tags: string[];
   description: string;
   bg: string;
-  image: any; // ← background photo for the card
+  image: { uri: string };
   icon: React.ReactNode;
   partners: Partner[];
 };
@@ -134,20 +174,6 @@ const CAROUSEL_ITEMS: CarouselItem[] = [
       require("../assets/vsscreen/vstogo-cafe-4.jpg"),
     ],
   },
-  {
-    id: "ballroom",
-    title: "Grand Ballroom",
-    subtitle: "Function Halls & Events",
-    description:
-      "Host your most memorable events at VS Hotel's Grand Ballroom. Whether it's a grand wedding, corporate gala, or social celebration, our versatile function halls offer world-class facilities, impeccable service, and an elegant setting that makes every occasion truly unforgettable.",
-    fallbackBg: "#1A0D2E",
-    accentColor: "#2D1A4A",
-    url: "https://www.vshotel.com.ph/events",
-    images: [
-      require("../assets/vsscreen/ballroom-1.jpg"),
-      require("../assets/vsscreen/ballroom-2.jpg"),
-    ],
-  },
 ];
 
 // ─── Retail Data ──────────────────────────────────────────────────────────────
@@ -159,7 +185,9 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     tags: ["Restaurant", "Café", "Bar"],
     description: "Curated restaurants, cafés, and bars inside VS Tower.",
     bg: "#1C1008",
-    image: require("../assets/categories/dining-and-food.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674204/dining-and-food_bglmrp.jpg",
+    },
     icon: <FontAwesome5 name="utensils" size={18} color="#D4A017" />,
     partners: [
       {
@@ -215,11 +243,13 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
   {
     id: "retail-shopping",
     title: "Shopping",
-    subtitle: "Conbini • Lifestyle • Gifts",
-    tags: ["Conbini", "Lifestyle", "Gifts"],
+    subtitle: "Boutique • Lifestyle • Gifts",
+    tags: ["Boutique", "Lifestyle", "Gifts"],
     description: "Premium shops and lifestyle brands right at your doorstep.",
     bg: "#0E1218",
-    image: require("../assets/categories/shopping.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674207/shopping_zzjckq.jpg",
+    },
     icon: <FontAwesome5 name="shopping-bag" size={18} color="#D4A017" />,
     partners: [
       {
@@ -264,7 +294,9 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     description:
       "Trusted health clinics and wellness centers to keep you at your best.",
     bg: "#0E1C12",
-    image: require("../assets/categories/health-and-wellness.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674211/health-and-wellness_dxfdnt.jpg",
+    },
     icon: <FontAwesome5 name="heartbeat" size={18} color="#D4A017" />,
     partners: [
       {
@@ -303,7 +335,9 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     description:
       "Professional office spaces and business centers within VS Tower.",
     bg: "#12181C",
-    image: require("../assets/categories/offices.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674214/offices_ifch46.jpg",
+    },
     icon: (
       <MaterialCommunityIcons
         name="office-building-outline"
@@ -413,7 +447,9 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
     description:
       "Structured sports programs and coaching for all ages and skill levels.",
     bg: "#101820",
-    image: require("../assets/categories/sports-programs.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674200/sports-programs_ffgbv3.jpg",
+    },
     icon: <FontAwesome5 name="running" size={18} color="#D4A017" />,
     partners: [
       {
@@ -495,12 +531,14 @@ const RETAIL_CATEGORIES: RetailCategory[] = [
   {
     id: "retail-services",
     title: "Services",
-    subtitle: "Laundry • Concierge",
-    tags: ["Laundry", "Concierge"],
+    subtitle: "Salon • Laundry • Concierge",
+    tags: ["Salon", "Laundry", "Concierge"],
     description:
       "Everyday services you need, all conveniently located within VS Tower.",
     bg: "#1A1010",
-    image: require("../assets/categories/services.jpg"),
+    image: {
+      uri: "https://res.cloudinary.com/dadshpos1/image/upload/v1779674218/services_ckjge2.jpg",
+    },
     icon: <FontAwesome5 name="concierge-bell" size={18} color="#D4A017" />,
     partners: [
       {
@@ -586,39 +624,103 @@ const JOBS: Job[] = [
     type: "Fulltime",
     shift: "8hr shift",
     duties: [
-      "Welcome and greet guests in a warm and friendly manner.",
-      "Present, promote and sell menu items.",
-      "Take accurate food and drinks orders.",
-      "Communicate order details to the kitchen staff.",
-      "Serve food and drink orders.",
-      "Check dishes and kitchenware for cleanliness and presentation.",
-      "Arrange table settings and maintain a tidy dining area.",
-      "Deliver checks and collect bill payments.",
+      "Take food and drink orders from customers accurately and with a positive attitude.",
+      "Write patrons food orders on order slips, memorize orders, or enter orders into computers.",
+      "Engage with customers in a friendly manner.",
+      "Knowledge of the menu, with the ability to make suggestions.",
+      "Ensure tables are enjoying their meals and take action to correct any problems.",
+      "Collect payments from tables.",
+      "Prepare checks that itemize and total meal costs and sales taxes.",
+      "Help food preparation staff when necessary.",
     ],
   },
   {
-    id: "front-desk",
-    title: "Front Desk Officer",
+    id: "massage-therapist-commission",
+    title: "Massage Therapist (Commission-Based)",
+    type: "Fulltime",
+    shift: "Day shift",
+    duties: [
+      "Perform various types of massage therapy, including Swedish, deep tissue, sports, and hot stone massages.",
+      "Conduct initial consultations to understand client needs and medical history.",
+      "Customize massage treatments to address specific client issues and preferences.",
+      "Maintain a clean, safe, and comfortable environment for clients.",
+      "Use appropriate techniques and equipment to ensure effective and safe treatments.",
+      "Provide clients with information on post-massage care and recommendations for ongoing wellness.",
+      "Build and maintain strong relationships with clients to encourage repeat business.",
+      "Stay updated on the latest massage therapy techniques and industry trends.",
+      "Maintain all necessary certifications and licenses.",
+    ],
+  },
+  {
+    id: "cashier",
+    title: "Cashier",
+    type: "Fulltime",
+    shift: "Day shift",
+    duties: [
+      "Process Customer Orders: Accurately take and input orders into the system.",
+      "Handle Cash and Card Transactions: Process payments through cash, credit cards, or other payment methods.",
+      "Issue Receipts and Change: Ensure that customers receive correct change and receipts.",
+      "Maintain Cash Register Balance: Reconcile the register's total cash at the end of each shift.",
+      "Provide Excellent Customer Service: Greet and assist customers, answering questions about the menu.",
+      "Handle Customer Complaints: Address customer concerns politely and escalate issues as necessary.",
+      "Operate POS System: Use the point-of-sale system efficiently and with accuracy.",
+      "Upsell Items: Suggest add-ons, desserts, or beverages to enhance the customer's order.",
+    ],
+  },
+  {
+    id: "duty-manager",
+    title: "Duty Manager",
+    type: "Fulltime",
+    shift: "Day shift",
+    duties: [
+      "Oversee the day-to-day operations of the bar, ensuring efficient and smooth service delivery.",
+      "Ensure the bar is stocked adequately with beverages, ingredients, and supplies.",
+      "Monitor bar opening and closing procedures and ensure all health and safety protocols are followed.",
+      "Supervise and support bar staff, including bartenders, servers, and support staff.",
+      "Conduct staff briefings before each shift, outlining service standards and special instructions.",
+      "Provide on-the-job training, coaching, and performance feedback to staff.",
+      "Resolve any customer complaints or issues in a professional and timely manner.",
+      "Oversee cash handling procedures, including opening and closing cash registers.",
+      "Handle emergencies, including customer incidents, equipment failures, or security issues.",
+    ],
+  },
+  {
+    id: "line-cook",
+    title: "Line Cook",
     type: "Fulltime",
     shift: "8hr shift",
     duties: [
-      "Welcome guests and check them in and out of the hotel.",
-      "Answer all client questions and incoming calls.",
-      "Redirect phone calls to the appropriate department.",
-      "Accept all letters and packages, and distribute them to their appropriate departments.",
-      "Monitor, organize and forward emails.",
-      "Track and order office equipment and supplies.",
-      "Maintain records and files.",
+      "Ensuring the preparation station and the kitchen are set up and stocked.",
+      "Preparing simple components of each dish on the menu by chopping vegetables, cutting meat, and preparing sauces.",
+      "Reporting to the executive chef and following instructions.",
+      "Making sure food preparation and storage areas meet health and safety standards.",
+      "Cleaning prep areas and taking care of leftovers.",
+      "Stocking inventory and supplies.",
+      "Cooking menu items with the support of the kitchen staff.",
     ],
   },
   {
-    id: "pr-intern",
-    title: "PR & Communications Intern",
-    type: "Internship",
-    shift: null,
+    id: "reservation-associate",
+    title: "Reservation Associate",
+    type: "Fulltime",
+    shift: "Day shift",
     duties: [
-      "Assist in developing and executing PR campaigns and strategies.",
-      "Draft and distribute press releases, media pitches, and other PR materials.",
+      "Process and confirm guest reservations through various channels (phone, email, online booking systems).",
+      "Provide exceptional service to guests by responding to inquiries and addressing concerns.",
+      "Promote special packages, upsell room types, and inform guests of available amenities.",
+      "Collaborate with front desk staff, housekeeping, and other departments for seamless guest experiences.",
+      "Maintain accurate records of reservations, cancellations, and changes in guest itineraries.",
+      "Address and resolve guest issues or complaints in a timely and professional manner.",
+      "Stay informed about local events, attractions, and the competitive landscape.",
+    ],
+  },
+  {
+    id: "pr-coordinator",
+    title: "PR Coordinator",
+    type: "Fulltime",
+    shift: "Day shift",
+    duties: [
+      "Help organize and promote PR events such as press conferences, product launches, and media tours.",
       "Handle event logistics, including invitations, venue coordination, and promotional materials.",
       "Assist in managing social media accounts by creating and scheduling posts related to PR campaigns.",
       "Assist in creating content for blogs, newsletters, and company websites.",
@@ -896,7 +998,8 @@ function PartnersBottomSheet({
           </TouchableOpacity>
         </View>
         <Text style={bss.partnerCount}>
-          {`${category.partners.length} partner${category.partners.length !== 1 ? "s" : ""} in VS Tower`}
+          {category.partners.length} partner
+          {category.partners.length !== 1 ? "s" : ""} in VS Tower
         </Text>
         <ScrollView
           style={{ flex: 1 }}
@@ -1009,7 +1112,7 @@ function CarouselBottomSheet({
             onPress={() => onAction(item)}
             activeOpacity={0.85}
           >
-            <Text style={bss.actionBtnText}>Learn More →</Text>
+            <Text style={bss.actionBtnText}>Visit Website →</Text>
           </TouchableOpacity>
           <TouchableOpacity style={bss.dismissBtn} onPress={handleClose}>
             <Text style={bss.dismissText}>Dismiss</Text>
@@ -1059,7 +1162,7 @@ function CarouselCard({
   );
 }
 
-// ─── Editorial Card — now with real background image + black gradient ─────────
+// ─── Editorial Card ───────────────────────────────────────────────────────────
 function EditorialCard({
   item,
   onPress,
@@ -1069,11 +1172,10 @@ function EditorialCard({
 }) {
   return (
     <TouchableOpacity
-      style={ed.card}
+      style={[ed.card, { backgroundColor: item.bg }]}
       onPress={() => onPress(item)}
       activeOpacity={0.88}
     >
-      {/* Background photo */}
       <Image
         source={item.image}
         style={{
@@ -1083,17 +1185,13 @@ function EditorialCard({
           top: 0,
           left: 0,
         }}
-        resizeMode="stretch"
+        resizeMode="cover"
       />
-
-      {/* Black gradient from transparent (top) → black (bottom) */}
       <LinearGradient
         colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.92)"]}
         locations={[0, 0.45, 1]}
         style={StyleSheet.absoluteFill}
       />
-
-      {/* Text content sits on top */}
       <View style={ed.content}>
         <View style={ed.tagsRow}>
           {item.tags.map((t) => (
@@ -1393,7 +1491,7 @@ function CareerBottomSheet({
           </TouchableOpacity>
         </View>
         <Text style={bss.partnerCount}>
-          {`${JOBS.length} open positions \u2022 Marivent Resort Hotel, Inc.`}
+          {JOBS.length} open positions • Marivent Resort Hotel, Inc.
         </Text>
         <ScrollView
           style={{ flex: 1 }}
@@ -1434,16 +1532,20 @@ export default function VSScreen() {
   };
 
   return (
-    <SafeAreaView style={s.safe} edges={["top"]}>
+    <SafeAreaView style={s.safe}>
       <StatusBar barStyle="light-content" backgroundColor={C.green} />
       <ScrollView style={s.scroll} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={s.header}>
-          <Text style={s.headerTitle}>More from VS Hotel Corp.</Text>
+          <View>
+            <Text style={s.eyebrow}>Explore</Text>
+            <Text style={s.headerTitle}>More from VS Hotel Corp.</Text>
+          </View>
         </View>
 
-        {/* Carousel */}
-        <View style={s.carouselWrap}>
+        {/* Carousel — lavender bg */}
+        <View style={[s.carouselWrap, { backgroundColor: C.lavender }]}>
+          <Text style={s.sectionLabel}>MORE FROM VS HOTEL</Text>
           <FlatList
             data={CAROUSEL_ITEMS}
             keyExtractor={(i) => i.id}
@@ -1465,8 +1567,113 @@ export default function VSScreen() {
           </View>
         </View>
 
-        {/* Retail Partners */}
-        <View style={s.editSection}>
+        {/* Cinema — white bg */}
+        <View
+          style={{
+            backgroundColor: C.white,
+            paddingTop: 28,
+            paddingBottom: 20,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              paddingHorizontal: 20,
+              marginBottom: 12,
+            }}
+          >
+            <FontAwesome5 name="film" size={16} color={C.goldLight} />
+            <View>
+              <Text
+                style={[
+                  s.sectionLabel,
+                  { paddingHorizontal: 0, marginBottom: 0 },
+                ]}
+              >
+                VICTORIA SPORTS CINEMA
+              </Text>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "900",
+                  color: C.dark,
+                  marginTop: 1,
+                }}
+              >
+                Now Showing
+              </Text>
+            </View>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              gap: 12,
+              paddingBottom: 4,
+            }}
+          >
+            {CINEMA_MOVIES.map((movie) => (
+              <View
+                key={movie.id}
+                style={{
+                  width: 130,
+                  height: 190,
+                  borderRadius: 14,
+                  overflow: "hidden",
+                  backgroundColor: "#1a1a1a",
+                }}
+              >
+                <Image
+                  source={movie.image}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "absolute",
+                  }}
+                  resizeMode="cover"
+                />
+                <LinearGradient
+                  colors={["transparent", "rgba(0,0,0,0.85)"]}
+                  locations={[0.5, 1]}
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 90,
+                  }}
+                />
+                <Text
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    color: C.white,
+                    fontSize: 12,
+                    fontWeight: "800",
+                    padding: 10,
+                    lineHeight: 16,
+                  }}
+                  numberOfLines={2}
+                >
+                  {movie.title}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Retail Partners — lavender bg */}
+        <View
+          style={[
+            s.editSection,
+            { backgroundColor: C.lavender, paddingBottom: 28 },
+          ]}
+        >
           <Text style={s.sectionLabel}>RETAIL PARTNERS</Text>
           <Text style={s.sectionSub}>Shop, dine & more within VS Tower</Text>
           {RETAIL_CATEGORIES.map((item) => (
@@ -1478,8 +1685,13 @@ export default function VSScreen() {
           ))}
         </View>
 
-        {/* Careers */}
-        <View style={s.editSection}>
+        {/* Careers — white bg */}
+        <View
+          style={[
+            s.editSection,
+            { backgroundColor: C.white, paddingBottom: 28 },
+          ]}
+        >
           <Text style={s.sectionLabel}>CAREERS</Text>
           <Text style={s.sectionSub}>Join the VS family</Text>
           <TouchableOpacity
@@ -1493,8 +1705,10 @@ export default function VSScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Contact */}
-        <View style={ct.container}>
+        {/* Contact — full width green */}
+        <View
+          style={{ backgroundColor: C.green, padding: 20, paddingBottom: 40 }}
+        >
           <Text style={ct.heading}>Contact Information</Text>
           <Text style={ct.groupLabel}>For inquiries and reservations:</Text>
           <Text style={ct.line}>+63 917 825 9938 / +63 917 184 2777</Text>
@@ -1507,8 +1721,6 @@ export default function VSScreen() {
           </Text>
           <Text style={ct.line}>events@vshotel.com.ph</Text>
         </View>
-
-        <View style={{ height: 120 }} />
       </ScrollView>
 
       <CarouselBottomSheet
@@ -1567,25 +1779,29 @@ const car = StyleSheet.create({
 const ed = StyleSheet.create({
   card: {
     width: "100%",
-    aspectRatio: 750 / 400,
+    height: 160,
     borderRadius: 16,
     overflow: "hidden",
     marginBottom: 12,
     justifyContent: "flex-end",
   },
+  overlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
   content: { padding: 16 },
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 6 },
   tag: {
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.45)",
+    borderColor: "rgba(255,255,255,0.35)",
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 3,
   },
-  tagText: { color: "rgba(255,255,255,0.85)", fontSize: 10, fontWeight: "600" },
-  title: { color: C.white, fontSize: 20, fontWeight: "800", marginBottom: 3 },
+  tagText: { color: "rgba(255,255,255,0.75)", fontSize: 10, fontWeight: "600" },
+  title: { color: C.white, fontSize: 18, fontWeight: "800", marginBottom: 3 },
   desc: {
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.6)",
     fontSize: 11,
     lineHeight: 16,
     marginBottom: 8,
@@ -1802,44 +2018,54 @@ const rf = StyleSheet.create({
   input: {
     backgroundColor: C.offWhite,
     borderRadius: 10,
-    padding: 12,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     fontSize: 14,
     color: C.dark,
-    borderWidth: 1,
-    borderColor: C.grayLight,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: C.offWhite,
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: C.grayLight,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
   },
   inputIcon: { paddingLeft: 12 },
-  inputWithIcon: { flex: 1, padding: 12, fontSize: 14, color: C.dark },
+  inputWithIcon: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 11,
+    fontSize: 14,
+    color: C.dark,
+  },
   picker: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: C.offWhite,
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: C.grayLight,
-    padding: 12,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
   },
   pickerText: { flex: 1, fontSize: 14, color: C.dark, marginLeft: 8 },
   dropdownContainer: {
     backgroundColor: C.white,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: C.grayLight,
+    borderColor: "#E2E8F0",
     marginTop: 4,
     overflow: "hidden",
+    elevation: 4,
   },
   dropdownItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 11,
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
     justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
@@ -1867,7 +2093,7 @@ const ct = StyleSheet.create({
   },
   heading: {
     color: C.white,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
     marginBottom: 16,
   },
@@ -1885,7 +2111,7 @@ const ct = StyleSheet.create({
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.green },
-  scroll: { flex: 1, backgroundColor: C.lavender },
+  scroll: { flex: 1 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -1895,8 +2121,15 @@ const s = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 20,
   },
+  eyebrow: {
+    fontSize: 11,
+    color: "#D4A017",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    fontWeight: "700",
+  },
   headerTitle: {
-    fontSize: 24, // ← bumped up from 22
+    fontSize: 22,
     fontWeight: "900",
     color: C.white,
     marginTop: 2,
@@ -1911,12 +2144,11 @@ const s = StyleSheet.create({
   },
   vsCircleText: { color: C.white, fontWeight: "900", fontSize: 16 },
   carouselWrap: { paddingTop: 24, paddingBottom: 8 },
-  // ─ Section labels — bigger ─
   sectionLabel: {
-    fontSize: 20, // ← was 11 (tracking label style), now big heading
-    fontWeight: "900",
+    fontSize: 11,
+    fontWeight: "800",
     color: C.green,
-    letterSpacing: 0.5,
+    letterSpacing: 2,
     paddingHorizontal: 20,
     marginBottom: 4,
   },
