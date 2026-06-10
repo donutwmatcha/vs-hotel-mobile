@@ -72,39 +72,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function fetchProfile(userId: string) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    if (!error && data) setProfile(data);
-
     const today = new Date().toISOString().split("T")[0];
 
-    const { data: ci } = await supabase
-      .from("check_ins")
-      .select("*")
-      .eq("guest_id", userId)
-      .eq("action", "Check-In")
-      .gte("checked_in_at", today + "T00:00:00")
-      .order("checked_in_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    setLastCheckIn(ci ?? null);
+    const [profileRes, ciRes, coRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", userId).single(),
+      supabase
+        .from("check_ins")
+        .select("*")
+        .eq("guest_id", userId)
+        .eq("action", "Check-In")
+        .gte("checked_in_at", today + "T00:00:00")
+        .order("checked_in_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("check_ins")
+        .select("*")
+        .eq("guest_id", userId)
+        .eq("action", "Check-Out")
+        .gte("checked_in_at", today + "T00:00:00")
+        .order("checked_in_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
-    const { data: co } = await supabase
-      .from("check_ins")
-      .select("*")
-      .eq("guest_id", userId)
-      .eq("action", "Check-Out")
-      .gte("checked_in_at", today + "T00:00:00")
-      .order("checked_in_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    setLastCheckOut(co ?? null);
+    if (!profileRes.error && profileRes.data) setProfile(profileRes.data);
+    setLastCheckIn(ciRes.data ?? null);
+    setLastCheckOut(coRes.data ?? null);
 
-    if (ci && ci.room_type && !co) {
-      setCurrentRoom(ci);
+    if (ciRes.data && ciRes.data.room_type && !coRes.data) {
+      setCurrentRoom(ciRes.data);
     } else {
       setCurrentRoom(null);
     }
@@ -117,8 +114,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      setLoading(false);
+      if (session?.user) {
+        fetchProfile(session.user.id).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
     });
 
     const {

@@ -35,6 +35,7 @@ const C = {
   grayLight: "#E5E7EB",
   dark: "#111827",
   red: "#EF4444",
+  blue: "#1D4ED8",
 };
 
 type Category = {
@@ -152,6 +153,17 @@ interface Review {
   points_awarded: number;
 }
 
+interface GuestRequest {
+  id: string;
+  category: string;
+  option: string;
+  room_number: string;
+  notes: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
     <View style={{ flexDirection: "row", gap: 2 }}>
@@ -167,17 +179,42 @@ function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
   );
 }
 
+function statusColor(status: string) {
+  switch (status) {
+    case "completed":
+      return { bg: "#DCFCE7", text: "#16A34A" };
+    case "follow_up":
+      return { bg: "#DBEAFE", text: "#1D4ED8" };
+    case "in_progress":
+      return { bg: "#FEF3C7", text: "#B45309" };
+    default:
+      return { bg: "#F1F5F9", text: "#64748B" };
+  }
+}
+
+function statusLabel(status: string) {
+  switch (status) {
+    case "completed":
+      return "Completed";
+    case "follow_up":
+      return "Follow Up";
+    case "in_progress":
+      return "In Progress";
+    default:
+      return "Pending";
+  }
+}
+
 export default function RequestScreen() {
   const { user, profile, lastCheckIn, lastCheckOut } = useAuth();
   const [activeTab, setActiveTab] = useState<
-    "request" | "feedback" | "history"
+    "request" | "myrequests" | "feedback" | "history"
   >("request");
 
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
   );
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [roomNumber, setRoomNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -189,11 +226,16 @@ export default function RequestScreen() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
 
-  // Logged in + currently checked in (has check-in but no check-out today)
+  const [myRequests, setMyRequests] = useState<GuestRequest[]>([]);
+  const [myRequestsLoading, setMyRequestsLoading] = useState(false);
+
   const isCheckedIn = !!lastCheckIn && !lastCheckOut;
+  const roomNumber = lastCheckIn?.room_number ?? null;
+  const roomType = lastCheckIn?.room_type ?? null;
 
   useEffect(() => {
     if (activeTab === "history") fetchReviews();
+    if (activeTab === "myrequests") fetchMyRequests();
   }, [activeTab]);
 
   useEffect(() => {
@@ -215,23 +257,51 @@ export default function RequestScreen() {
     if (!user) return;
     setHistoryLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("guest_reviews")
         .select("*")
         .eq("guest_id", user.id)
         .order("created_at", { ascending: false });
-      if (!error) setReviews(data ?? []);
+      setReviews(data ?? []);
     } catch (e) {
-      console.log("Error fetching reviews:", e);
+      console.log(e);
     } finally {
       setHistoryLoading(false);
     }
   }
 
+  async function fetchMyRequests() {
+    if (!user) return;
+    setMyRequestsLoading(true);
+    try {
+      const { data } = await supabase
+        .from("guest_requests")
+        .select("*")
+        .eq("guest_id", user.id)
+        .order("created_at", { ascending: false });
+      setMyRequests(data ?? []);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setMyRequestsLoading(false);
+    }
+  }
+
+  async function handleFollowUp(requestId: string) {
+    await supabase
+      .from("guest_requests")
+      .update({ status: "follow_up", updated_at: new Date().toISOString() })
+      .eq("id", requestId);
+    fetchMyRequests();
+    Alert.alert(
+      "Follow Up Sent",
+      "We've flagged this request. Our team will attend to it shortly.",
+    );
+  }
+
   const resetRequest = () => {
     setSelectedCategory(null);
     setSelectedOption(null);
-    setRoomNumber("");
     setNotes("");
   };
 
@@ -244,19 +314,18 @@ export default function RequestScreen() {
       Alert.alert("Missing Info", "Please choose a specific request.");
       return;
     }
-    if (!roomNumber.trim()) {
-      Alert.alert("Missing Info", "Please enter your room number.");
-      return;
-    }
     setLoading(true);
     try {
       const { error } = await supabase.from("guest_requests").insert({
+        guest_id: user?.id ?? null,
         category: selectedCategory.id,
         option: selectedOption,
-        room_number: roomNumber.trim(),
+        room_number: roomNumber ?? "—",
+        room_type: roomType ?? null,
         notes: notes.trim() || null,
         status: "pending",
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
       if (error) throw error;
       Alert.alert(
@@ -265,10 +334,7 @@ export default function RequestScreen() {
         [{ text: "OK", onPress: resetRequest }],
       );
     } catch (err: any) {
-      Alert.alert(
-        "Error",
-        err.message || "Could not submit request. Please try again.",
-      );
+      Alert.alert("Error", err.message || "Could not submit request.");
     } finally {
       setLoading(false);
     }
@@ -280,32 +346,24 @@ export default function RequestScreen() {
       return;
     }
     if (!commentText.trim()) {
-      Alert.alert(
-        "Missing Comment",
-        "Please write your feedback before submitting.",
-      );
+      Alert.alert("Missing Comment", "Please write your feedback.");
       return;
     }
     setCommentLoading(true);
     try {
-      const { error: fbError } = await supabase
-        .from("guest_feedback")
-        .insert({
+      await supabase.from("guest_feedback").insert({
+        rating,
+        comment: commentText.trim(),
+        created_at: new Date().toISOString(),
+      });
+      if (user && profile) {
+        await supabase.from("guest_reviews").insert({
+          guest_id: user.id,
           rating,
           comment: commentText.trim(),
+          points_awarded: 20,
           created_at: new Date().toISOString(),
         });
-      if (fbError) throw fbError;
-      if (user && profile) {
-        await supabase
-          .from("guest_reviews")
-          .insert({
-            guest_id: user.id,
-            rating,
-            comment: commentText.trim(),
-            points_awarded: 20,
-            created_at: new Date().toISOString(),
-          });
         await supabase
           .from("profiles")
           .update({ points: (profile.points ?? 0) + 20 })
@@ -349,7 +407,14 @@ export default function RequestScreen() {
     );
   }
 
-  // ── NOT LOGGED IN ────────────────────────────────────────────────────────
+  const catLabels: Record<string, string> = {
+    housekeeping: "Housekeeping",
+    guest_services: "Guest Services",
+    maintenance: "Maintenance",
+    help: "Help / Inquiry",
+  };
+
+  // NOT LOGGED IN
   if (!user) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -391,7 +456,7 @@ export default function RequestScreen() {
               marginBottom: 10,
             }}
           >
-            Sign In Required
+            Log In Required
           </Text>
           <Text
             style={{
@@ -403,7 +468,7 @@ export default function RequestScreen() {
             }}
           >
             You need to be a VS Hotel member to make requests and leave
-            feedback. Join for free to get started!
+            feedback.
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/signin")}
@@ -418,7 +483,7 @@ export default function RequestScreen() {
             }}
           >
             <Text style={{ color: C.white, fontWeight: "800", fontSize: 16 }}>
-              Sign In
+              Log In
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -442,50 +507,61 @@ export default function RequestScreen() {
     );
   }
 
-  // ── LOGGED IN ────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <StatusBar barStyle="light-content" backgroundColor={C.green} />
-
-      {/* Header */}
       <View style={styles.headerBlock}>
         <View style={styles.header}>
           <Text style={styles.headerEyebrow}>How can we help?</Text>
           <Text style={styles.headerTitle}>Requests & Feedback</Text>
         </View>
-        <View style={styles.tabRow}>
-          {(["request", "feedback", "history"] as const).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.tab, activeTab === tab && styles.tabActive]}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Ionicons
-                name={
-                  tab === "request"
-                    ? "notifications-outline"
-                    : tab === "feedback"
-                      ? "chatbubble-ellipses-outline"
-                      : "time-outline"
-                }
-                size={14}
-                color={activeTab === tab ? C.white : "rgba(255,255,255,0.6)"}
-              />
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab && styles.tabTextActive,
-                ]}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            gap: 8,
+            paddingBottom: 12,
+          }}
+        >
+          {(["request", "myrequests", "feedback", "history"] as const).map(
+            (tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={[styles.tab, activeTab === tab && styles.tabActive]}
+                onPress={() => setActiveTab(tab)}
               >
-                {tab === "request"
-                  ? "Request"
-                  : tab === "feedback"
-                    ? "Feedback"
-                    : "My Reviews"}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Ionicons
+                  name={
+                    tab === "request"
+                      ? "notifications-outline"
+                      : tab === "myrequests"
+                        ? "list-outline"
+                        : tab === "feedback"
+                          ? "chatbubble-ellipses-outline"
+                          : "time-outline"
+                  }
+                  size={14}
+                  color={activeTab === tab ? C.white : "rgba(255,255,255,0.6)"}
+                />
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === tab && styles.tabTextActive,
+                  ]}
+                >
+                  {tab === "request"
+                    ? "Request"
+                    : tab === "myrequests"
+                      ? "My Requests"
+                      : tab === "feedback"
+                        ? "Feedback"
+                        : "My Reviews"}
+                </Text>
+              </TouchableOpacity>
+            ),
+          )}
+        </ScrollView>
       </View>
 
       <KeyboardAvoidingView
@@ -498,10 +574,9 @@ export default function RequestScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* ── REQUEST TAB ── */}
+          {/* REQUEST TAB */}
           {activeTab === "request" && (
             <>
-              {/* Not checked in banner */}
               {!isCheckedIn && (
                 <View
                   style={{
@@ -544,46 +619,63 @@ export default function RequestScreen() {
                 </View>
               )}
 
-              {/* Room Number — greyed out if not checked in */}
-              <View
-                style={[styles.section, !isCheckedIn && styles.sectionDisabled]}
-              >
-                <Text
-                  style={[
-                    styles.sectionLabel,
-                    !isCheckedIn && styles.labelDisabled,
-                  ]}
-                >
-                  Your Room Number
-                </Text>
+              {/* Room info - auto filled, not editable */}
+              {isCheckedIn && roomNumber && (
                 <View
-                  style={[
-                    styles.inputRow,
-                    !isCheckedIn && styles.inputDisabled,
-                  ]}
+                  style={{
+                    backgroundColor: C.greenMint,
+                    borderRadius: 12,
+                    padding: 14,
+                    marginBottom: 20,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    borderWidth: 1,
+                    borderColor: "#BBF7D0",
+                  }}
                 >
-                  <Ionicons
-                    name="key-outline"
-                    size={18}
-                    color={isCheckedIn ? C.gray : C.grayLight}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={[
-                      styles.inputWithIcon,
-                      !isCheckedIn && { color: C.grayLight },
-                    ]}
-                    placeholder="e.g. 302"
-                    placeholderTextColor={isCheckedIn ? C.gray : C.grayLight}
-                    value={roomNumber}
-                    onChangeText={setRoomNumber}
-                    keyboardType="number-pad"
-                    editable={isCheckedIn}
-                  />
+                  <Ionicons name="bed-outline" size={20} color={C.green} />
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontWeight: "700",
+                        color: C.green,
+                        fontSize: 13,
+                      }}
+                    >
+                      Your Room
+                    </Text>
+                    <Text
+                      style={{
+                        color: C.green,
+                        fontSize: 15,
+                        fontWeight: "800",
+                      }}
+                    >
+                      Room {roomNumber} {roomType ? `· ${roomType}` : ""}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      backgroundColor: C.green,
+                      borderRadius: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: C.white,
+                        fontSize: 10,
+                        fontWeight: "700",
+                      }}
+                    >
+                      CONFIRMED
+                    </Text>
+                  </View>
                 </View>
-              </View>
+              )}
 
-              {/* Category — greyed out if not checked in */}
               <View
                 style={[styles.section, !isCheckedIn && styles.sectionDisabled]}
               >
@@ -620,7 +712,7 @@ export default function RequestScreen() {
                               ? isActive
                                 ? C.green
                                 : C.gray
-                              : C.grayLight,
+                              : "#A7C4B0",
                           )}
                         </View>
                         <Text
@@ -656,7 +748,6 @@ export default function RequestScreen() {
                 </View>
               )}
 
-              {/* Notes — greyed out if not checked in */}
               <View
                 style={[styles.section, !isCheckedIn && styles.sectionDisabled]}
               >
@@ -677,7 +768,7 @@ export default function RequestScreen() {
                   <Ionicons
                     name="pencil-outline"
                     size={18}
-                    color={isCheckedIn ? C.gray : C.grayLight}
+                    color={isCheckedIn ? C.gray : "#A7C4B0"}
                     style={[
                       styles.inputIcon,
                       { alignSelf: "flex-start", marginTop: 14 },
@@ -687,10 +778,10 @@ export default function RequestScreen() {
                     style={[
                       styles.inputWithIcon,
                       styles.textarea,
-                      !isCheckedIn && { color: C.grayLight },
+                      !isCheckedIn && { color: "#A7C4B0" },
                     ]}
                     placeholder="Any specific details for our team..."
-                    placeholderTextColor={isCheckedIn ? C.gray : C.grayLight}
+                    placeholderTextColor={isCheckedIn ? C.gray : "#A7C4B0"}
                     value={notes}
                     onChangeText={setNotes}
                     multiline
@@ -717,12 +808,12 @@ export default function RequestScreen() {
                     <Ionicons
                       name="send-outline"
                       size={18}
-                      color={isCheckedIn ? C.white : C.grayLight}
+                      color={isCheckedIn ? C.white : "#A7C4B0"}
                     />
                     <Text
                       style={[
                         styles.submitBtnText,
-                        !isCheckedIn && { color: C.grayLight },
+                        !isCheckedIn && { color: "#A7C4B0" },
                       ]}
                     >
                       Send Request
@@ -733,7 +824,208 @@ export default function RequestScreen() {
             </>
           )}
 
-          {/* ── FEEDBACK TAB ── */}
+          {/* MY REQUESTS TAB */}
+          {activeTab === "myrequests" && (
+            <>
+              {myRequestsLoading ? (
+                <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                  <ActivityIndicator color={C.green} size="large" />
+                </View>
+              ) : myRequests.length === 0 ? (
+                <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                  <Ionicons name="list-outline" size={44} color={C.grayLight} />
+                  <Text
+                    style={{
+                      color: C.gray,
+                      fontSize: 15,
+                      marginTop: 12,
+                      fontWeight: "600",
+                      textAlign: "center",
+                    }}
+                  >
+                    No requests yet
+                  </Text>
+                  <Text
+                    style={{
+                      color: C.gray,
+                      fontSize: 13,
+                      marginTop: 6,
+                      textAlign: "center",
+                    }}
+                  >
+                    Your submitted requests will appear here.
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ gap: 12 }}>
+                  <Text
+                    style={{ color: C.gray, fontSize: 13, marginBottom: 4 }}
+                  >
+                    {myRequests.length} request
+                    {myRequests.length !== 1 ? "s" : ""} submitted
+                  </Text>
+                  {myRequests.map((req) => {
+                    const sc = statusColor(req.status);
+                    const canFollowUp =
+                      req.status === "pending" || req.status === "in_progress";
+                    return (
+                      <View
+                        key={req.id}
+                        style={{
+                          backgroundColor: C.white,
+                          borderRadius: 14,
+                          padding: 16,
+                          elevation: 2,
+                          shadowColor: "#000",
+                          shadowOpacity: 0.05,
+                          shadowRadius: 6,
+                        }}
+                      >
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: 10,
+                          }}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <Text
+                              style={{
+                                fontWeight: "800",
+                                color: C.dark,
+                                fontSize: 14,
+                              }}
+                            >
+                              {req.option}
+                            </Text>
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                color: C.gray,
+                                marginTop: 2,
+                              }}
+                            >
+                              {catLabels[req.category] || req.category} · Room{" "}
+                              {req.room_number}
+                            </Text>
+                          </View>
+                          <View
+                            style={{
+                              backgroundColor: sc.bg,
+                              borderRadius: 20,
+                              paddingHorizontal: 10,
+                              paddingVertical: 4,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: sc.text,
+                                fontSize: 11,
+                                fontWeight: "700",
+                              }}
+                            >
+                              {statusLabel(req.status)}
+                            </Text>
+                          </View>
+                        </View>
+                        {req.notes && (
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: C.gray,
+                              marginBottom: 10,
+                              fontStyle: "italic",
+                            }}
+                          >
+                            "{req.notes}"
+                          </Text>
+                        )}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, color: C.gray }}>
+                            {formatDate(req.created_at)}
+                          </Text>
+                          {canFollowUp && (
+                            <TouchableOpacity
+                              onPress={() =>
+                                Alert.alert(
+                                  "Follow Up",
+                                  "Flag this request for follow-up?",
+                                  [
+                                    { text: "Cancel", style: "cancel" },
+                                    {
+                                      text: "Yes, Follow Up",
+                                      onPress: () => handleFollowUp(req.id),
+                                    },
+                                  ],
+                                )
+                              }
+                              style={{
+                                backgroundColor: "#DBEAFE",
+                                borderRadius: 20,
+                                paddingHorizontal: 12,
+                                paddingVertical: 6,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                            >
+                              <Ionicons
+                                name="flag-outline"
+                                size={12}
+                                color={C.blue}
+                              />
+                              <Text
+                                style={{
+                                  color: C.blue,
+                                  fontSize: 12,
+                                  fontWeight: "700",
+                                }}
+                              >
+                                Follow Up
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                          {req.status === "completed" && (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                            >
+                              <Ionicons
+                                name="checkmark-circle"
+                                size={14}
+                                color="#16A34A"
+                              />
+                              <Text
+                                style={{
+                                  color: "#16A34A",
+                                  fontSize: 12,
+                                  fontWeight: "700",
+                                }}
+                              >
+                                Done
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </>
+          )}
+
+          {/* FEEDBACK TAB */}
           {activeTab === "feedback" && (
             <>
               {!lastCheckOut ? (
@@ -918,15 +1210,12 @@ export default function RequestScreen() {
             </>
           )}
 
-          {/* ── HISTORY TAB ── */}
+          {/* HISTORY TAB */}
           {activeTab === "history" && (
             <>
               {historyLoading ? (
                 <View style={{ alignItems: "center", paddingVertical: 40 }}>
                   <ActivityIndicator color={C.green} size="large" />
-                  <Text style={{ color: C.gray, marginTop: 12 }}>
-                    Loading reviews...
-                  </Text>
                 </View>
               ) : reviews.length === 0 ? (
                 <View style={{ alignItems: "center", paddingVertical: 40 }}>
@@ -1077,8 +1366,8 @@ export default function RequestScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.green },
-  headerBlock: { backgroundColor: C.green, paddingBottom: 12 },
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
+  headerBlock: { backgroundColor: C.green, paddingBottom: 4 },
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10 },
   headerEyebrow: {
     fontSize: 12,
     color: "#D4A017",
@@ -1092,15 +1381,13 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     marginTop: 2,
   },
-  tabRow: { flexDirection: "row", paddingHorizontal: 20, gap: 8 },
   tab: {
-    flex: 1,
     flexDirection: "row",
-    paddingVertical: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     borderRadius: 10,
     backgroundColor: "#1a6b3c",
     alignItems: "center",
-    justifyContent: "center",
     gap: 5,
   },
   tabActive: { backgroundColor: "#B8860B" },

@@ -1,5 +1,6 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Image, Text, View } from "react-native";
@@ -10,6 +11,11 @@ SplashScreen.preventAutoHideAsync();
 
 export function LoadingOverlay({ message }: { message: string }) {
   const barWidth = useRef(new Animated.Value(0)).current;
+
+  // TEMP - delete after testing
+  useEffect(() => {
+    AsyncStorage.removeItem("vs_hotel_onboarding_done");
+  }, []);
 
   useEffect(() => {
     barWidth.setValue(0);
@@ -85,10 +91,22 @@ function RootLayout() {
     "KeplerStd-Italic": require("../src/assets/fonts/KeplerStd-Italic.otf"),
   });
   const [timedOut, setTimedOut] = useState(false);
+  const onboardingChecked = useRef(false);
 
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
+
+  // Only check onboarding AFTER both fonts loaded AND auth loading is done
+  useEffect(() => {
+    if (!fontsLoaded || loading) return;
+    if (onboardingChecked.current) return;
+    onboardingChecked.current = true;
+
+    AsyncStorage.getItem("vs_hotel_onboarding_done").then((val) => {
+      if (val !== "true") router.replace("/(tabs)/onboarding" as any);
+    });
+  }, [fontsLoaded, loading]);
 
   // Timeout only for initial app open, not for action loading screens
   useEffect(() => {

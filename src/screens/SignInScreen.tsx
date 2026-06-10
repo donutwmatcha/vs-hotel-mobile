@@ -28,7 +28,6 @@ export default function SignInScreen() {
       return;
     }
     setLoading(true);
-    setAppLoading(true, "Logging you in...");
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -36,12 +35,10 @@ export default function SignInScreen() {
       });
       if (error) throw error;
       if (data.user) {
-        await refreshProfile();
-        setAppLoading(false);
         router.replace("/");
+        refreshProfile();
       }
     } catch (error: any) {
-      setAppLoading(false);
       Alert.alert("Log In Failed", error.message);
     } finally {
       setLoading(false);

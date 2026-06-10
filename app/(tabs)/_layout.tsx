@@ -85,10 +85,20 @@ export default function TabLayout() {
       {/* Hidden screens */}
       <Tabs.Screen name="booking" options={{ href: null }} />
       <Tabs.Screen name="rooms" options={{ href: null }} />
-      <Tabs.Screen name="signup" options={{ href: null }} />
-      <Tabs.Screen name="signin" options={{ href: null }} />
+      <Tabs.Screen
+        name="signup"
+        options={{ href: null, tabBarStyle: { display: "none" } }}
+      />
+      <Tabs.Screen
+        name="signin"
+        options={{ href: null, tabBarStyle: { display: "none" } }}
+      />
       <Tabs.Screen name="verify" options={{ href: null }} />
       <Tabs.Screen name="payment" options={{ href: null }} />
+      <Tabs.Screen
+        name="onboarding"
+        options={{ href: null, tabBarStyle: { display: "none" } }}
+      />
     </Tabs>
   );
 }

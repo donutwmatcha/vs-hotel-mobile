@@ -1,15 +1,17 @@
 // src/components/RoomsSection.tsx
-import { FontAwesome5 } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import {
   Image,
-  Linking,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import WebView from "react-native-webview";
 import { Room, ROOMS } from "../constants/rooms";
 import RoomDetailModal from "./RoomDetailModal";
 
@@ -23,11 +25,67 @@ const C = {
   dark: "#0F172A",
 };
 
+const BOOKING_URL =
+  "https://www.swiftbook.io/inst/#home?propertyId=363MjIpd9DKOxXNT5Koe1JFI0MzQ=&JDRN=Y";
 const PREVIEW_ROOMS = ROOMS;
+
+function BookingModal({
+  visible,
+  onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: C.green }}
+        edges={["top"]}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: C.green,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            gap: 12,
+          }}
+        >
+          <TouchableOpacity
+            onPress={onClose}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: "rgba(255,255,255,0.15)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="close" size={20} color={C.white} />
+          </TouchableOpacity>
+          <Text
+            style={{ color: C.white, fontWeight: "800", fontSize: 16, flex: 1 }}
+          >
+            Book a Room
+          </Text>
+          <FontAwesome5 name="hotel" size={16} color={C.gold} />
+        </View>
+        <WebView
+          source={{ uri: BOOKING_URL }}
+          style={{ flex: 1 }}
+          startInLoadingState
+        />
+      </SafeAreaView>
+    </Modal>
+  );
+}
 
 export default function RoomsSection() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [bookingVisible, setBookingVisible] = useState(false);
 
   function handleRoomPress(room: Room) {
     setSelectedRoom(room);
@@ -36,7 +94,6 @@ export default function RoomsSection() {
 
   return (
     <View style={s.container}>
-      {/* Section header */}
       <View style={s.header}>
         <View>
           <Text style={s.eyebrow}>Accommodations</Text>
@@ -44,7 +101,6 @@ export default function RoomsSection() {
         </View>
       </View>
 
-      {/* Horizontal scroll of room cards */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -66,12 +122,10 @@ export default function RoomsSection() {
                 style={s.cardImage}
                 resizeMode="cover"
               />
-
               <View style={s.badge}>
                 <FontAwesome5 name="user" size={9} color={C.white} />
                 <Text style={s.badgeText}>{room.capacity}</Text>
               </View>
-
               <View style={s.cardInfo}>
                 <Text style={s.cardName} numberOfLines={1}>
                   {room.name}
@@ -86,7 +140,6 @@ export default function RoomsSection() {
                     <Text style={s.pillText}>{room.bedding}</Text>
                   </View>
                 </View>
-
                 <View style={s.cardFooter}>
                   <View>
                     <Text style={s.fromText}>from</Text>
@@ -97,11 +150,7 @@ export default function RoomsSection() {
                   </View>
                   <TouchableOpacity
                     style={s.bookChip}
-                    onPress={() =>
-                      Linking.openURL(
-                        "https://www.swiftbook.io/inst/#home?propertyId=363MjIpd9DKOxXNT5Koe1JFI0MzQ=&JDRN=Y",
-                      ).catch(() => {})
-                    }
+                    onPress={() => setBookingVisible(true)}
                   >
                     <Text style={s.bookChipText}>Book</Text>
                   </TouchableOpacity>
@@ -112,11 +161,14 @@ export default function RoomsSection() {
         })}
       </ScrollView>
 
-      {/* Room Detail Modal */}
       <RoomDetailModal
         room={selectedRoom}
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
+      />
+      <BookingModal
+        visible={bookingVisible}
+        onClose={() => setBookingVisible(false)}
       />
     </View>
   );

@@ -1,19 +1,19 @@
 // src/screens/HomeScreen.tsx
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { Ionicons as _Ionicons, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Alert,
+  Modal as _Modal, Alert,
   Dimensions,
-  Image,
-  Linking,
-  NativeScrollEvent,
+  Image, Linking, NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollView,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
+import { SafeAreaView as _SafeAreaView } from "react-native-safe-area-context";
+import WebView from "react-native-webview";
 import RoomsSection from "../components/RoomsSection";
 import { useAuth } from "../context/AuthContext";
 
@@ -131,6 +131,7 @@ export default function HomeScreen() {
   const { user, profile, lastCheckIn, lastCheckOut, refreshProfile } =
     useAuth();
   const [currentPromo, setCurrentPromo] = useState(0);
+  const [bookingVisible, setBookingVisible] = useState(false);
   const [weather, setWeather] = useState<{
     temp: string;
     label: string;
@@ -250,11 +251,7 @@ export default function HomeScreen() {
           style={{ position: "absolute", bottom: -22, alignSelf: "center" }}
         >
           <TouchableOpacity
-            onPress={() =>
-              Linking.openURL(
-                "https://www.swiftbook.io/inst/#home?propertyId=363MjIpd9DKOxXNT5Koe1JFI0MzQ=&JDRN=Y",
-              ).catch(() => {})
-            }
+            onPress={() => setBookingVisible(true)}
             style={{
               backgroundColor: C.gold,
               paddingVertical: 14,
@@ -877,6 +874,59 @@ export default function HomeScreen() {
         </ScrollView>
       </View>
 
+      {/* Booking WebView Modal */}
+      <_Modal
+        visible={bookingVisible}
+        animationType="slide"
+        onRequestClose={() => setBookingVisible(false)}
+      >
+        <_SafeAreaView
+          style={{ flex: 1, backgroundColor: "#14532D" }}
+          edges={["top"]}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#14532D",
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              gap: 12,
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => setBookingVisible(false)}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: "rgba(255,255,255,0.15)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <_Ionicons name="close" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text
+              style={{
+                color: "#FFFFFF",
+                fontWeight: "800",
+                fontSize: 16,
+                flex: 1,
+              }}
+            >
+              Book a Room
+            </Text>
+          </View>
+          <WebView
+            source={{
+              uri: "https://www.swiftbook.io/inst/#home?propertyId=363MjIpd9DKOxXNT5Koe1JFI0MzQ=&JDRN=Y",
+            }}
+            style={{ flex: 1 }}
+            startInLoadingState
+          />
+        </_SafeAreaView>
+      </_Modal>
       <View style={{ height: 20 }} />
     </ScrollView>
   );
