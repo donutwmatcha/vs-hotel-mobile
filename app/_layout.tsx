@@ -5,6 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Image, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import OfflineBanner from "../src/components/OfflineBanner";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
@@ -128,6 +129,7 @@ export default function Layout() {
     <SafeAreaProvider>
       <AuthProvider>
         <RootLayout />
+        <OfflineBanner />
       </AuthProvider>
     </SafeAreaProvider>
   );

@@ -1174,7 +1174,7 @@ export default function ProfileScreen() {
                 <Text
                   style={{ color: C.white, fontWeight: "bold", fontSize: 16 }}
                 >
-                  Sign In
+                  Log In
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1338,7 +1338,7 @@ export default function ProfileScreen() {
                 lineHeight: 20,
               }}
             >
-              Sign in to unlock flash sales, night owl deals, and app-exclusive
+              Log in to unlock flash sales, night owl deals, and app-exclusive
               promos.
             </Text>
             <TouchableOpacity
@@ -1376,9 +1376,7 @@ export default function ProfileScreen() {
             <FontAwesome5 name="sign-in-alt" size={13} color={C.gray} />
             <Text style={{ color: C.gray, fontSize: 14 }}>
               Already a member?{" "}
-              <Text style={{ color: C.green, fontWeight: "bold" }}>
-                Sign In
-              </Text>
+              <Text style={{ color: C.green, fontWeight: "bold" }}>Log In</Text>
             </Text>
           </TouchableOpacity>
         </ScrollView>

@@ -44,7 +44,7 @@ const SLIDES = [
     subtitle:
       "Earn VS Points on bookings, dining, and services. Redeem them for free nights, upgrades, and exclusive perks.",
     image:
-      "https://res.cloudinary.com/dadshpos1/image/upload/f_auto,q_auto:good,w_800/v1781074877/slide-2_xi1zoz.png",
+      "https://res.cloudinary.com/dadshpos1/image/upload/v1781080627/slide-2_pcsx9i.jpg",
     icon: "star",
     iconLib: "FontAwesome5",
   },
