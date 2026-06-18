@@ -1,16 +1,22 @@
-// src/screens/HomeScreen.tsx
-import { Ionicons as _Ionicons, FontAwesome5, Ionicons } from "@expo/vector-icons";
+import {
+  Ionicons as _Ionicons,
+  FontAwesome5,
+  Ionicons,
+} from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Modal as _Modal, Alert,
+  Modal as _Modal,
+  Alert,
   Dimensions,
-  Image, Linking, NativeScrollEvent,
+  Image,
+  Linking,
+  NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollView,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView as _SafeAreaView } from "react-native-safe-area-context";
 import WebView from "react-native-webview";

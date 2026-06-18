@@ -398,7 +398,7 @@ function FieldError({ msg }: { msg: string | null }) {
 }
 
 export default function SignUpScreen() {
-  const { refreshProfile } = useAuth();
+  const { refreshProfile, signInWithGoogle } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -408,16 +408,15 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // Birthday
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [birthMonth, setBirthMonth] = useState(1);
   const [birthDay, setBirthDay] = useState(1);
   const [birthYear, setBirthYear] = useState(2000);
   const [birthdateConfirmed, setBirthdateConfirmed] = useState(false);
 
-  // ID
   const [showIDTypePicker, setShowIDTypePicker] = useState(false);
   const [idType, setIdType] = useState("");
   const [idPhotoUri, setIdPhotoUri] = useState<string | null>(null);
@@ -474,6 +473,18 @@ export default function SignUpScreen() {
   }
   function inputBorder(field: string) {
     return touched[field] && errors[field] ? RED : BORDER;
+  }
+
+  async function handleGoogleSignIn() {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      router.replace("/");
+    } catch (error: any) {
+      Alert.alert("Google Sign-In Failed", error.message);
+    } finally {
+      setGoogleLoading(false);
+    }
   }
 
   async function pickIDPhoto() {
@@ -650,54 +661,103 @@ export default function SignUpScreen() {
             </View>
           </View>
 
-          {/* Benefits */}
-          <View
-            style={{
-              backgroundColor: "#F0EEF5",
-              borderLeftWidth: 4,
-              borderLeftColor: GOLD,
-              margin: 20,
-              padding: 16,
-              borderRadius: 12,
-            }}
-          >
-            <View
+          <View style={{ paddingHorizontal: 20, paddingTop: 24, gap: 16 }}>
+            {/* Google Sign-Up Button */}
+            <TouchableOpacity
+              onPress={handleGoogleSignIn}
+              disabled={googleLoading}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 8,
-                marginBottom: 8,
+                justifyContent: "center",
+                gap: 12,
+                borderWidth: 1.5,
+                borderColor: "#E2E8F0",
+                borderRadius: 30,
+                paddingVertical: 14,
+                backgroundColor: googleLoading ? "#F8FAFC" : "#fff",
               }}
             >
-              <FontAwesome5 name="star" size={14} color={GOLD} solid />
+              {!googleLoading && (
+                <Image
+                  source={{
+                    uri: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
+                  }}
+                  style={{ width: 20, height: 20 }}
+                />
+              )}
               <Text
-                style={{ fontWeight: "bold", color: "#1B4332", fontSize: 14 }}
+                style={{
+                  color: googleLoading ? "#94A3B8" : "#0F172A",
+                  fontWeight: "600",
+                  fontSize: 15,
+                }}
               >
-                Join for Free and Get:
+                {googleLoading ? "Signing in..." : "Continue with Google"}
               </Text>
-            </View>
-            {[
-              "Exclusive member-only rates",
-              "VS Points on every stay",
-              "Early access to flash sales",
-              "Birthday bonus points",
-            ].map((perk, i) => (
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+            >
               <View
-                key={i}
+                style={{ flex: 1, height: 1, backgroundColor: "#E2E8F0" }}
+              />
+              <Text style={{ color: "#94A3B8", fontSize: 13 }}>
+                or sign up with email
+              </Text>
+              <View
+                style={{ flex: 1, height: 1, backgroundColor: "#E2E8F0" }}
+              />
+            </View>
+
+            {/* Benefits */}
+            <View
+              style={{
+                backgroundColor: "#F0EEF5",
+                borderLeftWidth: 4,
+                borderLeftColor: GOLD,
+                padding: 16,
+                borderRadius: 12,
+              }}
+            >
+              <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 8,
-                  marginBottom: 4,
+                  marginBottom: 8,
                 }}
               >
-                <Ionicons name="checkmark-circle" size={16} color="#1B4332" />
-                <Text style={{ color: "#4B5563", fontSize: 13 }}>{perk}</Text>
+                <FontAwesome5 name="star" size={14} color={GOLD} solid />
+                <Text
+                  style={{ fontWeight: "bold", color: "#1B4332", fontSize: 14 }}
+                >
+                  Join for Free and Get:
+                </Text>
               </View>
-            ))}
-          </View>
+              {[
+                "Exclusive member-only rates",
+                "VS Points on every stay",
+                "Early access to flash sales",
+                "Birthday bonus points",
+              ].map((perk, i) => (
+                <View
+                  key={i}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 4,
+                  }}
+                >
+                  <Ionicons name="checkmark-circle" size={16} color="#1B4332" />
+                  <Text style={{ color: "#4B5563", fontSize: 13 }}>{perk}</Text>
+                </View>
+              ))}
+            </View>
 
-          <View style={{ paddingHorizontal: 20, gap: 16 }}>
             {/* Name */}
             <View style={{ flexDirection: "row", gap: 12 }}>
               <View style={{ flex: 1 }}>
@@ -934,8 +994,6 @@ export default function SignUpScreen() {
                   </Text>
                 </View>
               </View>
-
-              {/* ID Type */}
               <View>
                 <FieldLabel text="ID TYPE" required />
                 <TouchableOpacity
@@ -969,8 +1027,6 @@ export default function SignUpScreen() {
                 </TouchableOpacity>
                 <FieldError msg={showError("idType")} />
               </View>
-
-              {/* ID Photo */}
               <View>
                 <FieldLabel text="ID PHOTO" required />
                 {idPhotoUri ? (
@@ -1090,7 +1146,6 @@ export default function SignUpScreen() {
                 )}
                 <FieldError msg={showError("idPhoto")} />
               </View>
-
               <View
                 style={{
                   backgroundColor: "#FEF3C7",

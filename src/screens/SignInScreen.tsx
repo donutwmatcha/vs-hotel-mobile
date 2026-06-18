@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,11 +17,12 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
 export default function SignInScreen() {
-  const { refreshProfile, setAppLoading } = useAuth();
+  const { refreshProfile, setAppLoading, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleSignIn() {
     if (!email || !password) {
@@ -42,6 +44,18 @@ export default function SignInScreen() {
       Alert.alert("Log In Failed", error.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      router.replace("/");
+    } catch (error: any) {
+      Alert.alert("Google Sign-In Failed", error.message);
+    } finally {
+      setGoogleLoading(false);
     }
   }
 
@@ -152,12 +166,13 @@ export default function SignInScreen() {
               </Text>
             </TouchableOpacity>
 
+            {/* Divider */}
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 12,
-                marginVertical: 8,
+                marginVertical: 4,
               }}
             >
               <View
@@ -168,6 +183,41 @@ export default function SignInScreen() {
                 style={{ flex: 1, height: 1, backgroundColor: "#E2E8F0" }}
               />
             </View>
+
+            {/* Google Sign-In Button */}
+            <TouchableOpacity
+              onPress={handleGoogleSignIn}
+              disabled={googleLoading}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                borderWidth: 1.5,
+                borderColor: "#E2E8F0",
+                borderRadius: 30,
+                paddingVertical: 14,
+                backgroundColor: googleLoading ? "#F8FAFC" : "#fff",
+              }}
+            >
+              {!googleLoading && (
+                <Image
+                  source={{
+                    uri: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
+                  }}
+                  style={{ width: 20, height: 20 }}
+                />
+              )}
+              <Text
+                style={{
+                  color: googleLoading ? "#94A3B8" : "#0F172A",
+                  fontWeight: "600",
+                  fontSize: 15,
+                }}
+              >
+                {googleLoading ? "Signing in..." : "Continue with Google"}
+              </Text>
+            </TouchableOpacity>
 
             <View
               style={{

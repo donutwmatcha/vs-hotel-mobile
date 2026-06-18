@@ -1,6 +1,10 @@
+import * as AuthSession from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { supabase } from "../lib/supabase";
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface Profile {
   id: string;
@@ -42,6 +46,7 @@ interface AuthContextType {
   setAppLoading: (loading: boolean, message?: string) => void;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -55,6 +60,7 @@ const AuthContext = createContext<AuthContextType>({
   setAppLoading: () => {},
   signOut: async () => {},
   refreshProfile: async () => {},
+  signInWithGoogle: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -109,6 +115,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function refreshProfile() {
     if (user) await fetchProfile(user.id);
+  }
+
+  async function signInWithGoogle() {
+    try {
+      const redirectUrl = AuthSession.makeRedirectUri({
+        scheme: "vshotelmobile",
+      });
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.url) throw new Error("No OAuth URL returned");
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        redirectUrl,
+      );
+
+      if (result.type === "success" && result.url) {
+        const url = new URL(result.url);
+
+        // Extract tokens from URL fragment
+        const fragment = url.hash.substring(1);
+        const params = new URLSearchParams(fragment);
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+
+        if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (sessionError) throw sessionError;
+        }
+      }
+    } catch (error: any) {
+      console.error("Google sign-in error:", error.message);
+      throw error;
+    }
   }
 
   useEffect(() => {
@@ -175,6 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAppLoading,
         signOut,
         refreshProfile,
+        signInWithGoogle,
       }}
     >
       {children}

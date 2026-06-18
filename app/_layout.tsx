@@ -13,11 +13,6 @@ SplashScreen.preventAutoHideAsync();
 export function LoadingOverlay({ message }: { message: string }) {
   const barWidth = useRef(new Animated.Value(0)).current;
 
-  // TEMP - delete after testing
-  useEffect(() => {
-    AsyncStorage.removeItem("vs_hotel_onboarding_done");
-  }, []);
-
   useEffect(() => {
     barWidth.setValue(0);
     Animated.sequence([
